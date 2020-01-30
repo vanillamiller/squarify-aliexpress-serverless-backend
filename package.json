@@ -9,7 +9,7 @@
   "author": "Anthony Miller",
   "license": "ISC",
   "dependencies": {
-    "square-connect": "^2.20191217.0"
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "^13.1.8"

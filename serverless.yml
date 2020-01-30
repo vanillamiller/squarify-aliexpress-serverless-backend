@@ -13,8 +13,8 @@
 
 service: squarify-aliexpress
 # app and org for use with dashboard.serverless.com
-app: squarify-aliexpress-app
-org: agmiller794
+# app: squarify-aliexpress-app
+# org: agmiller794
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -67,13 +67,19 @@ functions:
     events: 
       - http:
           method: get
-          path: square/authorization
-  requestToken:
-    handler: requestToken.requestToken
+          path: authorization
+  getAliItem:
+    handler: aliItem.get
     events:
       - http:
-          method: get
-          path: square/token
+          method: post
+          path: items/getAliItem
+  postSquareItem:
+    handler: squareItem.post
+    events:
+      - http:
+          method: post
+          path: items/postSquareItem
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details

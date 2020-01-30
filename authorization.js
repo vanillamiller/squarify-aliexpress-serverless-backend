@@ -1,17 +1,42 @@
 'use strict';
 
-// more or less a redundant step but hides client id from the user by not directly inserting it into the link.
-module.exports.authorizer = async event => {
-  // const id=process.env.CLIENT_ID;
-  const id = "sandbox-sq0idb-9-aHuRqCAFAbgjNyoQy9RA";
-  const url="https://squareupsandbox.com/oauth2/authorize?client_id=" + id + "&scope=INVENTORY_WRITE"
-  const response = {
-    statusCode: 301,
-    headers: {
-        Location: url
-      }
+const https = require('https');
+
+
+exports.authorizer= async (event, context) => new Promise((resolve, reject) => {
+    
+    const params = {
+        host: "connect.squareupsandbox.com",
+        path: "/oauth2/token",
+        port: 443,
+        method: "POST",
+        headers: {
+          "Square-Version" : "2020-01-22",
+        }
     };
-
-  return response;
-
-};
+    
+    const body = JSON.stringify({
+      "client_id": process.env.CLIENT_ID,
+      "client_secret": process.env.CLIENT_SECRET,
+      "code": event.queryStringParameters.code,
+      "grant_type": "authorization_code"
+    })
+    
+    
+    const req = https.request(params, (res) => {
+            res.on('data', function (chunk) {
+            console.log('BODY: ' + chunk);
+            resolve(chunk);
+             });
+            
+        });
+        
+        req.on('error', (e) => {
+          reject(e.message);
+        });
+        
+    // send the request
+    req.write(body);
+    req.end();
+    
+});
