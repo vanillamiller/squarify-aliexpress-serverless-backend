@@ -4,15 +4,6 @@ const https = require('https');
 const uuid = require('uuid');
 
 class AliItem {
-
-    // constructor(name, price, desc, variants, images) {
-    //     this.name = name; 
-    //     this.price = price;
-    //     this.description = desc;
-    //     this.variants = variants;
-    //     this.desc = desc;
-    //     this.images = images;
-    // }
     
     constructor(aliData){
         this.name = aliData.titleModule.subject, 
@@ -43,8 +34,8 @@ class AliItem {
             "image" : this.image,
         }
         if(this.variants.length > 0){
-            let addVariations = this.variants.map(v => {
-                let variation = {id : `#${v.name}`}
+            let addOptions = this.variants.map(v => {
+                let option = {id : `#${v.name}`, type : "ITEM_OPTION"}
                 let variants = v.variants.map( w => {
                     let info = {
                         name : w.name,
@@ -55,38 +46,18 @@ class AliItem {
                     }
                     return info;
                 });
-                variation.item_data = variants;
+                variation.item_variation_data = variants;
                 return variation;
             })
-            itemData.variations = addVariations;
+            itemData.item_options_data = addOptions;
         }
         object.item_data = itemData;
         categoryItem.object = object;
         return categoryItem;
     }
 }
-        // return {
-        //     "idempotency_key" : uuid(),
-        //     "object": {
-        //         "type": "ITEM",
-        //         "id" : `#${this.name}`,
-        //         "item_data" : {
-        //             "name" : this.name,
-        //             "description" : this.description,
-        //             "image" : this.images[0],
-        //             "variations" : this.variations.map(variation => {
-        //                 return {
-        //                     "id" : variation.name
-        //                     "type" : "ITEM_VARIATION",
-        //                     "image_data" : {
-        //                         "name" : variation.name,
 
-        //                     }}
-        //             })
-        //         }
-        //     }
-        // }
-
+exports.AliItem = AliItem;
 
 const scrape = (data) => {
     try{
@@ -100,24 +71,6 @@ const scrape = (data) => {
 }
 
 const getItemId = (url) => url.match(/item\/[0-9]*\.html/g)[0].replace(/\D/g,'');
-
-// const aliItemFactory = (aliData) => new AliItem(
-//     aliData.titleModule.subject, 
-//     aliData.priceModule.formatedActivityPrice,
-//     aliData.pageModule.description,
-//     aliData.skuModule.productSKUPropertyList.map((p) => {
-//         let property = {};
-//         property.name = p.skuPropertyName;
-//         property.variants = p.skuPropertyValues.map((v) => {
-//             let variant = {};
-//             variant.name = v.propertyValueDisplayName;
-//             variant.image = v.skuPropertyImagePath;
-//             return variant;
-//         })    
-//         return property;
-//     }),
-//     aliData.imageModule.imagePathList,
-//     );
 
 exports.get = async (event, context) => new Promise((resolve, reject) => {
     
