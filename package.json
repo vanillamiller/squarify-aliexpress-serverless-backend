@@ -2,13 +2,16 @@
   "name": "squarelambda",
   "version": "1.0.0",
   "description": "lambda function that logs in to square",
-  "main": "index.js",
+  "main": "requestToken.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Anthony Miller",
   "license": "ISC",
   "dependencies": {
-    "typescript": "^3.7.5"
+    "square-connect": "^2.20191217.0"
+  },
+  "devDependencies": {
+    "@types/node": "^13.1.8"
   }
 }
