@@ -21,7 +21,7 @@ exports.authorizer = async (event, context) => new Promise((resolve, reject) => 
       "client_id": process.env.CLIENT_ID,
       "client_secret": process.env.CLIENT_SECRET,
       "code": event.queryStringParameters.code,
-      "grant_type": "authorization_code"
+      "grant_type" : "authorization_code"
     })
     
     
