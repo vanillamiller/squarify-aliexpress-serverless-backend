@@ -24,8 +24,13 @@ provider:
   name: aws
   runtime: nodejs12.x
   environment: 
+<<<<<<< HEAD
     CLIENT_ID : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     CLIENT_SECRET : "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
+=======
+    CLIENT_ID : "sq0idp-xt-Zcw3N2Fx4I-CIbh86Bg"
+    CLIENT_SECRET : "sq0csp-7mWrrUpkEsHpdEAeHGyD6onqzKaj5mFKu16cXjqN49Q"
+>>>>>>> dev
   region: ap-southeast-2
 
 # you can overwrite defaults here
