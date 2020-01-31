@@ -11,10 +11,10 @@
 #
 # Happy Coding!
 
-service: squarify-aliexpress
+service: xxxxxxxxxxxxxxxx
 # app and org for use with dashboard.serverless.com
-# app: squarify-aliexpress-app
-# org: agmiller794
+# app: xxxxxxxxxxxxxx
+# org: xxxxxxxxxxxx
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -24,8 +24,8 @@ provider:
   name: aws
   runtime: nodejs12.x
   environment: 
-    CLIENT_ID : "sandbox-sq0idb-9-aHuRqCAFAbgjNyoQy9RA"
-    CLIENT_SECRET : "EAAAEEw-vZSlXxMwsy3QpWwRFqyj6Rhda3wgMDj62JLe3zSMlS2bfhfQTrZ4e15Q"
+    CLIENT_ID : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    CLIENT_SECRET : "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
   region: ap-southeast-2
 
 # you can overwrite defaults here
