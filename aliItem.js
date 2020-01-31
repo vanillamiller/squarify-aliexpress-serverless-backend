@@ -39,7 +39,7 @@ class AliItem {
 
         if(this.variants.length > 0){
             let addOptions = this.variants.map(v => {
-                let option = {id : uuid(), type : "ITEM_OPTION"}
+                let option = {id : `#${v.name.replace(/\s/g, '-')}`, type : "ITEM_OPTION"}
                 let values = v.variants.map( w => {
                     let info = {
                         id : `#${w.name.replace(/\s/g, '-')}`,
