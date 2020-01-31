@@ -24,8 +24,8 @@ provider:
   name: aws
   runtime: nodejs12.x
   environment: 
-    CLIENT_ID : "sandbox-sq0idb-9-aHuRqCAFAbgjNyoQy9RA"
-    CLIENT_SECRET : "EAAAEEw-vZSlXxMwsy3QpWwRFqyj6Rhda3wgMDj62JLe3zSMlS2bfhfQTrZ4e15Q"
+    CLIENT_ID : "sq0idp-xt-Zcw3N2Fx4I-CIbh86Bg"
+    CLIENT_SECRET : "EAAAEMac37X6v1KMlcembRoSUSo9j7ncYy43T5dHEmzQ6dNx_CKIl30DaNYi8YHi"
   region: ap-southeast-2
 
 # you can overwrite defaults here

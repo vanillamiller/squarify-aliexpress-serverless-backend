@@ -6,13 +6,14 @@ const https = require('https');
 exports.authorizer = async (event, context) => new Promise((resolve, reject) => {
     
     const params = {
-        host: "connect.squareupsandbox.com",
+        host: "connect.squareup.com",
         path: "/oauth2/token",
         port: 443,
         method: "POST",
         headers: {
-          "Square-Version" : "2020-01-22",
-          "Content-type" : "application/json"
+          "Square-Version" : "2019-12-17",
+          "Content-type" : "application/json",
+          "Accept" : "application/json"
         }
     };
     
@@ -25,9 +26,19 @@ exports.authorizer = async (event, context) => new Promise((resolve, reject) => 
     
     
     const req = https.request(params, (res) => {
+            let body = '';
             res.on('data', function (chunk) {
             console.log('BODY: ' + chunk);
-            resolve(chunk);
+            body += chunk;
+            resolve({
+              statusCode : 200,
+              headers : {
+                "Content-type" : "application/json"
+              },
+              body : JSON.stringify({
+                message : body
+              })
+            });
              });
             
         });
