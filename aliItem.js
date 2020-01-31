@@ -35,11 +35,11 @@ class AliItem {
             "image" : this.image,
         }
 
-        itemData.item_options = this.variants.map(v => {return {"item_option_id" : `#${v.name}`}});
+        
 
         if(this.variants.length > 0){
             let addOptions = this.variants.map(v => {
-                let option = {id : `#${v.name}`, type : "ITEM_OPTION", name : v.name}
+                let option = {id : uuid(), type : "ITEM_OPTION"}
                 let values = v.variants.map( w => {
                     let info = {
                         id : `#${w.name.replace(/\s/g, '-')}`,
@@ -48,17 +48,19 @@ class AliItem {
                             name : w.name
                         }
                     }
-                    if(v.image != null){
-                        info.image = w.image;
-                    }
                     return info;
                 });
-                option.values = values;
+                option.item_option_data={name : v.name, values : values};
+                // option.item_option_data.item_option_data.name = v.name;
+                // option.item_option_data.values = values;
                 return option;
             })
             // itemData.item_options = addOptions;
             objects = [...addOptions];
+            itemData.item_options = addOptions.map(opt => {return {"item_option_id" : opt.id}});
         }
+
+        
         object.item_data = itemData;
         objects.push(object);
         req.batches = [{objects: objects}];
