@@ -3,7 +3,7 @@
 const https = require('https');
 
 
-exports.authorizer= async (event, context) => new Promise((resolve, reject) => {
+exports.authorizer = async (event, context) => new Promise((resolve, reject) => {
     
     const params = {
         host: "connect.squareupsandbox.com",
@@ -12,6 +12,7 @@ exports.authorizer= async (event, context) => new Promise((resolve, reject) => {
         method: "POST",
         headers: {
           "Square-Version" : "2020-01-22",
+          "Content-type" : "application/json"
         }
     };
     
