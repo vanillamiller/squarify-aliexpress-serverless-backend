@@ -1,0 +1,88 @@
+{
+    "idempotency_key": "78a98cf8-df25-4385-b6a3-331d47cd00b4",
+    "object": {
+      "type": "ITEM",
+      "id": "#Giordano-Men-T-Shirt-Men-Short-Sleeves-3-pack-Tshirt-Men-Solid-Cotton-Mens-Tee-Summer-T-Shirt-Men-Clothing-Sous-Vetement-Homme",
+      "item_data": {
+        "name": "Giordano Men T Shirt Men Short Sleeves 3-pack Tshirt Men Solid Cotton Mens Tee Summer T Shirt Men Clothing Sous Vetement Homme",
+        "description": "Cheap men t-shirt, Buy Quality men tees directly from China vetement homme Suppliers: Giordano Men T Shirt Men Short Sleeves 3-pack Tshirt Men Solid Cotton Mens Tee Summer T Shirt Men Clothing Sous Vetement Homme\nEnjoy ✓Free Shipping Worldwide! ✓Limited Time Sale ✓Easy Return.",
+        "item_options": [
+          {
+            "id": "#Color",
+            "type": "ITEM_OPTION",
+            "values": [
+              {
+                "id": "#22White",
+                "type": "ITEM_OPTION_VAL",
+                "item_option_value_data": {
+                  "name": "22White"
+                }
+              },
+              {
+                "id": "#24White",
+                "type": "ITEM_OPTION_VAL",
+                "item_option_value_data": {
+                  "name": "24White"
+                }
+              },
+              {
+                "id": "#26Gray",
+                "type": "ITEM_OPTION_VAL",
+                "item_option_value_data": {
+                  "name": "26Gray"
+                }
+              },
+              {
+                "id": "#21White",
+                "type": "ITEM_OPTION_VAL",
+                "item_option_value_data": {
+                  "name": "21White"
+                }
+              }
+            ]
+          },
+          {
+            "id": "#Size",
+            "type": "ITEM_OPTION",
+            "values": [
+              {
+                "id": "#S",
+                "type": "ITEM_OPTION_VAL",
+                "item_option_value_data": {
+                  "name": "S"
+                }
+              },
+              {
+                "id": "#M",
+                "type": "ITEM_OPTION_VAL",
+                "item_option_value_data": {
+                  "name": "M"
+                }
+              },
+              {
+                "id": "#L",
+                "type": "ITEM_OPTION_VAL",
+                "item_option_value_data": {
+                  "name": "L"
+                }
+              },
+              {
+                "id": "#XL",
+                "type": "ITEM_OPTION_VAL",
+                "item_option_value_data": {
+                  "name": "XL"
+                }
+              },
+              {
+                "id": "#XXL",
+                "type": "ITEM_OPTION_VAL",
+                "item_option_value_data": {
+                  "name": "XXL"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }

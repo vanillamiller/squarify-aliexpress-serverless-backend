@@ -24,36 +24,45 @@ class AliItem {
     }
 
     toSquareItem = () => {
-        let categoryItem = {"idempotency_key" : uuid()};
+        let req = {"idempotency_key" : uuid()};
+        let objects = [];
         let object = {"type": "ITEM",
-            "id" : `#${this.name}`,
+            "id" : `#${this.name.replace(/\s/g, '-')}`,
         };
         let itemData = {
             "name" : this.name,
             "description" : this.description,
             "image" : this.image,
         }
+
+        itemData.item_options = this.variants.map(v => {return {"item_option_id" : `#${v.name}`}});
+
         if(this.variants.length > 0){
             let addOptions = this.variants.map(v => {
-                let option = {id : `#${v.name}`, type : "ITEM_OPTION"}
-                let variants = v.variants.map( w => {
+                let option = {id : `#${v.name}`, type : "ITEM_OPTION", name : v.name}
+                let values = v.variants.map( w => {
                     let info = {
-                        name : w.name,
-                        type : "ITEM"
+                        id : `#${w.name.replace(/\s/g, '-')}`,
+                        type : "ITEM_OPTION_VAL",
+                        item_option_value_data : {
+                            name : w.name
+                        }
                     }
                     if(v.image != null){
                         info.image = w.image;
                     }
                     return info;
                 });
-                variation.item_variation_data = variants;
-                return variation;
+                option.values = values;
+                return option;
             })
-            itemData.item_options_data = addOptions;
+            // itemData.item_options = addOptions;
+            objects = [...addOptions];
         }
         object.item_data = itemData;
-        categoryItem.object = object;
-        return categoryItem;
+        objects.push(object);
+        req.batches = [{objects: objects}];
+        return req;
     }
 }
 
@@ -101,8 +110,8 @@ exports.get = async (event, context) => new Promise((resolve, reject) => {
         res.on('end', function() {
             console.log("DONE");
             let ali = new AliItem(scrape(data.toString()));
-            console.log(ali.toSquareItem().object.item_data.variations[0].item_data);
-            resolve(ali);
+            console.log(ali.toSquareItem().object);
+            resolve(ali.toSquareItem());
         });
     });
     req.end();
