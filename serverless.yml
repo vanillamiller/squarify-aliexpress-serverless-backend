@@ -62,24 +62,9 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  authorization:
-    handler: authorization.authorizer
-    events: 
-      - http:
-          method: get
-          path: authorization
-  getAliItem:
-    handler: aliItem.get
-    events:
-      - http:
-          method: post
-          path: items/getAliItem
-  postSquareItem:
-    handler: squareItem.post
-    events:
-      - http:
-          method: post
-          path: items/postSquareItem
+  - ${file(./serverless-functions/auth.yml)}
+  - ${file(./serverless-functions/items.yml)}
+  
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details

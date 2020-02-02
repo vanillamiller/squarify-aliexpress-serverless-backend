@@ -1,0 +1,6 @@
+ authorization:
+    handler: authorization.authorizer
+    events: 
+      - http:
+          method: get
+          path: authorization

@@ -1,0 +1,12 @@
+getAliItem:
+    handler: aliItem.get
+    events:
+      - http:
+          method: post
+          path: items/getAliItem
+postSquareItem:
+    handler: squareItem.post
+    events:
+      - http:
+          method: post
+          path: items/postSquareItem
