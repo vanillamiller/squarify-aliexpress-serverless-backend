@@ -6,79 +6,219 @@ const https = require('https');
 const items = async (event, context) => new Promise((resolve, reject) => {
     
     const params = {
-        host: "connect.squareup.com",
+        host: "connect.squareupsandbox.com",
         path: "/v2/catalog/batch-upsert",
         port: 443,
         method: "POST",
         headers: {
           "Square-Version" : "2020-01-22",
           "Content-type" : "application/json",
-          "Authorization" : "Bearer EAAAEMac37X6v1KMlcembRoSUSo9j7ncYy43T5dHEmzQ6dNx_CKIl30DaNYi8YHi"
+          "Authorization" : "Bearer EAAAENsJsS5blWbXBwJJqMB97a6teeX8y2JxuBjMO35HZuXUSlN5bIPnqFn1MhJp"
         }
     };
     
     const body = JSON.stringify({
-      "idempotency_key": "527de89d-9832-468b-a09a-c724e14ded12",
+      "idempotency_key": "5d804d57-aa7c-45cf-bf94-a6fa96a6afde",
       "batches": [
         {
           "objects": [
             {
-              "id": "836091d0-11e5-4089-b63e-55a1b1c59f6a",
+              "id": "#Color",
               "type": "ITEM_OPTION",
               "item_option_data": {
                 "name": "Color",
                 "values": [
                   {
-                    "id": "#22White",
+                    "id": "#DM-601",
                     "type": "ITEM_OPTION_VAL",
                     "item_option_value_data": {
-                      "name": "22White"
+                      "name": "DM-601"
                     }
                   },
                   {
-                    "id": "#24White",
+                    "id": "#DM-602",
                     "type": "ITEM_OPTION_VAL",
                     "item_option_value_data": {
-                      "name": "24White"
+                      "name": "DM-602"
                     }
                   },
                   {
-                    "id": "#26Gray",
+                    "id": "#DM-629",
                     "type": "ITEM_OPTION_VAL",
                     "item_option_value_data": {
-                      "name": "26Gray"
+                      "name": "DM-629"
                     }
                   },
                   {
-                    "id": "#21White",
+                    "id": "#DM-606",
                     "type": "ITEM_OPTION_VAL",
                     "item_option_value_data": {
-                      "name": "21White"
+                      "name": "DM-606"
+                    }
+                  },
+                  {
+                    "id": "#DM-613",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-613"
+                    }
+                  },
+                  {
+                    "id": "#DM-615",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-615"
+                    }
+                  },
+                  {
+                    "id": "#DM-633",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-633"
+                    }
+                  },
+                  {
+                    "id": "#DM-616",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-616"
+                    }
+                  },
+                  {
+                    "id": "#DM-617",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-617"
+                    }
+                  },
+                  {
+                    "id": "#DM-630",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-630"
+                    }
+                  },
+                  {
+                    "id": "#DM-635",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-635"
+                    }
+                  },
+                  {
+                    "id": "#DM-618",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-618"
+                    }
+                  },
+                  {
+                    "id": "#DM-621",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-621"
+                    }
+                  },
+                  {
+                    "id": "#DM-622",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-622"
+                    }
+                  },
+                  {
+                    "id": "#DM-623",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-623"
+                    }
+                  },
+                  {
+                    "id": "#DM-624",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-624"
+                    }
+                  },
+                  {
+                    "id": "#BS-667",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "BS-667"
+                    }
+                  },
+                  {
+                    "id": "#DM-636",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-636"
+                    }
+                  },
+                  {
+                    "id": "#BS-603",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "BS-603"
+                    }
+                  },
+                  {
+                    "id": "#BS-608",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "BS-608"
+                    }
+                  },
+                  {
+                    "id": "#DM-625",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-625"
+                    }
+                  },
+                  {
+                    "id": "#DM-626",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "DM-626"
+                    }
+                  },
+                  {
+                    "id": "#BS-611",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "BS-611"
+                    }
+                  },
+                  {
+                    "id": "#BS-609",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "BS-609"
+                    }
+                  },
+                  {
+                    "id": "#BS-625",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "BS-625"
+                    }
+                  },
+                  {
+                    "id": "#BS-631",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "BS-631"
                     }
                   }
                 ]
               }
             },
             {
-              "id": "ce42d10e-b677-4d32-a66c-dda8d7e823b3",
+              "id": "#Size",
               "type": "ITEM_OPTION",
               "item_option_data": {
                 "name": "Size",
                 "values": [
-                  {
-                    "id": "#S",
-                    "type": "ITEM_OPTION_VAL",
-                    "item_option_value_data": {
-                      "name": "S"
-                    }
-                  },
-                  {
-                    "id": "#M",
-                    "type": "ITEM_OPTION_VAL",
-                    "item_option_value_data": {
-                      "name": "M"
-                    }
-                  },
                   {
                     "id": "#L",
                     "type": "ITEM_OPTION_VAL",
@@ -99,22 +239,50 @@ const items = async (event, context) => new Promise((resolve, reject) => {
                     "item_option_value_data": {
                       "name": "XXL"
                     }
+                  },
+                  {
+                    "id": "#XXXL",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "XXXL"
+                    }
+                  },
+                  {
+                    "id": "#4XL",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "4XL"
+                    }
+                  },
+                  {
+                    "id": "#5XL",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "5XL"
+                    }
+                  },
+                  {
+                    "id": "#6XL",
+                    "type": "ITEM_OPTION_VAL",
+                    "item_option_value_data": {
+                      "name": "6XL"
+                    }
                   }
                 ]
               }
             },
             {
               "type": "ITEM",
-              "id": "#Giordano-Men-T-Shirt-Men-Short-Sleeves-3-pack-Tshirt-Men-Solid-Cotton-Mens-Tee-Summer-T-Shirt-Men-Clothing-Sous-Vetement-Homme",
+              "id": "#NIGRITY-Autumn-Winter-Mens-Long-Sleeve-Plaid-Warm-Thick-Fleece-Lined-Shirt-Fashion-Soft-Casual-Flannel-Shirt-Plus-Big-Size-L-6XL",
               "item_data": {
-                "name": "Giordano Men T Shirt Men Short Sleeves 3-pack Tshirt Men Solid Cotton Mens Tee Summer T Shirt Men Clothing Sous Vetement Homme",
-                "description": "Cheap men t-shirt, Buy Quality men tees directly from China vetement homme Suppliers: Giordano Men T Shirt Men Short Sleeves 3-pack Tshirt Men Solid Cotton Mens Tee Summer T Shirt Men Clothing Sous Vetement Homme\nEnjoy ✓Free Shipping Worldwide! ✓Limited Time Sale ✓Easy Return.",
+                "name": "NIGRITY Autumn Winter Mens Long Sleeve Plaid Warm Thick Fleece Lined Shirt Fashion Soft Casual Flannel Shirt Plus Big Size L-6XL",
+                "description": "Cheap Casual Shirts, Buy Directly from China Suppliers:NIGRITY Autumn Winter Mens Long Sleeve Plaid Warm Thick Fleece Lined Shirt Fashion Soft Casual Flannel Shirt Plus Big Size L-6XL\nEnjoy ✓Free Shipping Worldwide! ✓Limited Time Sale ✓Easy Return.",
                 "item_options": [
                   {
-                    "item_option_id": "836091d0-11e5-4089-b63e-55a1b1c59f6a"
+                    "item_option_id": "#Color"
                   },
                   {
-                    "item_option_id": "ce42d10e-b677-4d32-a66c-dda8d7e823b3"
+                    "item_option_id": "#Size"
                   }
                 ]
               }
@@ -125,9 +293,11 @@ const items = async (event, context) => new Promise((resolve, reject) => {
     });
     
     const req = https.request(params, (res) => {
+      let body = '';
             res.on('data', function (chunk) {
-            console.log('BODY: ' + chunk);
-            resolve(chunk);
+              body += chunk;
+            console.log(body);
+            resolve(body);
              });
             
         });
