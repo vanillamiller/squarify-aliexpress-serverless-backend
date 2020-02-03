@@ -1,49 +1,50 @@
 {
-    "idempotency_key": "78a98cf8-df25-4385-b6a3-331d47cd00b4",
-    "object": {
-      "type": "ITEM",
-      "id": "#Giordano-Men-T-Shirt-Men-Short-Sleeves-3-pack-Tshirt-Men-Solid-Cotton-Mens-Tee-Summer-T-Shirt-Men-Clothing-Sous-Vetement-Homme",
-      "item_data": {
-        "name": "Giordano Men T Shirt Men Short Sleeves 3-pack Tshirt Men Solid Cotton Mens Tee Summer T Shirt Men Clothing Sous Vetement Homme",
-        "description": "Cheap men t-shirt, Buy Quality men tees directly from China vetement homme Suppliers: Giordano Men T Shirt Men Short Sleeves 3-pack Tshirt Men Solid Cotton Mens Tee Summer T Shirt Men Clothing Sous Vetement Homme\nEnjoy ✓Free Shipping Worldwide! ✓Limited Time Sale ✓Easy Return.",
-        "item_options": [
-          {
-            "id": "#Color",
-            "type": "ITEM_OPTION",
+  "idempotency_key": "d7a749c0-7fb6-430a-8a65-bbbfdadd579b",
+  "batches": [
+    {
+      "objects": [
+        {
+          "id": "#Color",
+          "type": "ITEM_OPTION",
+          "item_option_data": {
+            "name": "Color",
             "values": [
               {
-                "id": "#22White",
+                "id": "#Black",
                 "type": "ITEM_OPTION_VAL",
                 "item_option_value_data": {
-                  "name": "22White"
+                  "name": "Black"
                 }
               },
               {
-                "id": "#24White",
+                "id": "#Gray",
                 "type": "ITEM_OPTION_VAL",
                 "item_option_value_data": {
-                  "name": "24White"
+                  "name": "Gray"
                 }
               },
               {
-                "id": "#26Gray",
+                "id": "#Blue",
                 "type": "ITEM_OPTION_VAL",
                 "item_option_value_data": {
-                  "name": "26Gray"
+                  "name": "Blue"
                 }
               },
               {
-                "id": "#21White",
+                "id": "#Dark-blue",
                 "type": "ITEM_OPTION_VAL",
                 "item_option_value_data": {
-                  "name": "21White"
+                  "name": "Dark blue"
                 }
               }
             ]
-          },
-          {
-            "id": "#Size",
-            "type": "ITEM_OPTION",
+          }
+        },
+        {
+          "id": "#Size",
+          "type": "ITEM_OPTION",
+          "item_option_data": {
+            "name": "Size",
             "values": [
               {
                 "id": "#S",
@@ -79,10 +80,41 @@
                 "item_option_value_data": {
                   "name": "XXL"
                 }
+              },
+              {
+                "id": "#XXXL",
+                "type": "ITEM_OPTION_VAL",
+                "item_option_value_data": {
+                  "name": "XXXL"
+                }
+              },
+              {
+                "id": "#4XL",
+                "type": "ITEM_OPTION_VAL",
+                "item_option_value_data": {
+                  "name": "4XL"
+                }
               }
             ]
           }
-        ]
-      }
+        },
+        {
+          "type": "ITEM",
+          "id": "#Men's-Running-T-Shirts,-Quick-Dry-Compression-Sport-T-Shirts,-Fitness-Gym-Running-Shirts-Tees,-Men's-Soccer-Jersey-Sportswear",
+          "item_data": {
+            "name": "Men's Running T-Shirts, Quick Dry Compression Sport T-Shirts, Fitness Gym Running Shirts Tees, Men's Soccer Jersey Sportswear",
+            "description": "Cheap Running T-Shirts, Buy Directly from China Suppliers:Men's Running T-Shirts, Quick Dry Compression Sport T-Shirts, Fitness Gym Running Shirts Tees, Men's Soccer Jersey Sportswear\nEnjoy ✓Free Shipping Worldwide! ✓Limited Time Sale ✓Easy Return.",
+            "item_options": [
+              {
+                "item_option_id": "#Color"
+              },
+              {
+                "item_option_id": "#Size"
+              }
+            ]
+          }
+        }
+      ]
     }
-  }
+  ]
+}

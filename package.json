@@ -9,6 +9,7 @@
   "author": "Anthony Miller",
   "license": "ISC",
   "dependencies": {
+    "jsonwebtoken": "^8.5.1",
     "uuid": "^3.4.0"
   },
   "devDependencies": {

@@ -1,0 +1,6 @@
+ authorization:
+    handler: squareAuthorization.authorizer
+    events: 
+      - http:
+          method: get
+          path: authorization
