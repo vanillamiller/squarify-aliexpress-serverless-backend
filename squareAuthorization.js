@@ -25,7 +25,6 @@ exports.authorizer = async (event, context) => new Promise((resolve, reject) => 
       "grant_type" : "authorization_code"
     })
     
-    
     const req = https.request(params, (res) => {
             let body = '';
             res.on('data', function (chunk) {
@@ -45,7 +44,6 @@ exports.authorizer = async (event, context) => new Promise((resolve, reject) => 
                 },
                 body : user
               });
-   
             });
         });
         

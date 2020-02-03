@@ -35,8 +35,6 @@ class AliItem {
             "description" : this.description,
             "image" : this.image,
         };
-
-        
         if(this.variants.length > 0){
             let addOptions = this.variants.map(v => {
                 // uuid's are used because square options are universal in the backend
@@ -89,14 +87,14 @@ const scrape = (data) => {
     }
 }
 
-const getItemId = (url) => url.match(/item\/[0-9]*\.html/g)[0].replace(/\D/g,'');
+// const getItemId = (url) => url.match(/item\/[0-9]*\.html/g)[0].replace(/\D/g,'');
 
 exports.get = async (event, context) => new Promise((resolve, reject) => {
     
     let itemId = false;
     
     try{
-        itemId = getItemId(event.url);
+        itemId = event.queryStringParameters.item;
     } catch(e){
         itemId = false;
     }
@@ -121,7 +119,13 @@ exports.get = async (event, context) => new Promise((resolve, reject) => {
             console.log("DONE");
             let ali = new AliItem(scrape(data.toString()));
             console.log(ali.toSquareItem().object);
-            resolve(ali.toSquareItem());
+            resolve({
+                statusCode : 200,
+                headers : {
+                  "Content-type" : "application/json"
+                },
+                body : JSON.stringify(ali)
+              });
         });
     });
     req.end();

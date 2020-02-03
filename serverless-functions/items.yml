@@ -2,11 +2,11 @@ getAliItem:
     handler: aliItem.get
     events:
       - http:
-          method: post
-          path: items/getAliItem
+          method: get
+          path: items
 postSquareItem:
     handler: squareItem.post
     events:
       - http:
           method: post
-          path: items/postSquareItem
+          path: items
