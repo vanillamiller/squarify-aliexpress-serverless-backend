@@ -3,9 +3,22 @@
 const https = require('https');
 const uuid = require('uuid');
 
+const scrape = (data) => {
+    try{
+        // remove the dangling comma and all redundant stuff after and return
+        let cleaned = data.match(/data:[\s\S]*?};/g)[0].replace(/[\n\r]/g, '');
+        return JSON.parse(cleaned.slice(6, cleaned.lastIndexOf('},')+1));
+    } catch (e){
+        // if Aliexpress schema changes will not crash but return JSON parsing error
+        return e;
+    }
+}
 class AliItem {
     
     constructor(aliData){
+        if(aliData == null) {
+            
+            return this;}
         this.name = aliData.titleModule.subject, 
         this.price = aliData.priceModule.formatedActivityPrice,
         this.description = aliData.pageModule.description,
@@ -21,10 +34,60 @@ class AliItem {
             return property;
         }),
         this.images = aliData.imageModule.imagePathList
-    }
+    };
+
+     static get(itemIdFromEvent) {
+        
+        return new Promise((resolve, reject) => {
+    
+        let itemId = false;
+        
+        try{
+            itemId = itemIdFromEvent;
+        } catch(e){
+            itemId = false;
+        }
+        
+        if(itemId){
+        const params = {
+        host: "www.aliexpress.com",
+        path: `/item/${itemId}.html`,
+        port: 443,
+        method: "GET",
+        };	
+        
+        
+        const req = https.request(params, function(res) {
+            let data = '';
+            console.log('STATUS: ' + res.statusCode);
+            res.setEncoding('utf8');
+            res.on('data', function(chunk) {
+                data += chunk;
+            });
+            res.on('end', function() {
+                // console.log(scrape(data.toString()));
+                let ali = new AliItem(scrape(data.toString()));
+                // console.log(ali.toSquareItem());
+                resolve({
+                    statusCode : 200,
+                    headers : {
+                      "Content-type" : "application/json"
+                    },
+                    body : JSON.stringify(ali)
+                  });
+            });
+        });
+        req.end();
+        } else {
+            resolve('something bad happened')
+        }
+        
+    });
+}
 
     // converts the loaded aliItem into a batch upsert body 
-    toSquareItem = () => {
+    toSquareItem() {
+
         let req = {"idempotency_key" : uuid()};
         let objects = [];
         let object = {"type": "ITEM",
@@ -74,63 +137,11 @@ class AliItem {
     }
 }
 
-exports.AliItem = AliItem;
-
-const scrape = (data) => {
-    try{
-        // remove the dangling comma and all redundant stuff after and return
-        let cleaned = data.match(/data:[\s\S]*?};/g)[0].replace(/[\n\r]/g, '');
-        return JSON.parse(cleaned.slice(6, cleaned.lastIndexOf('},')+1));
-    } catch (e){
-        // if Aliexpress schema changes will not crash but return JSON parsing error
-        return e;
-    }
-}
-
-// const getItemId = (url) => url.match(/item\/[0-9]*\.html/g)[0].replace(/\D/g,'');
-
-exports.get = async (event, context) => new Promise((resolve, reject) => {
-    
-    let itemId = false;
-    
-    try{
-        itemId = event.queryStringParameters.item;
-    } catch(e){
-        itemId = false;
-    }
-    
-    if(itemId){
-    const params = {
-	host: "www.aliexpress.com",
-	path: `/item/${itemId}.html`,
-	port: 443,
-	method: "GET",
-	};	
-    
-    
-    const req = https.request(params, function(res) {
-        let data = '';
-        console.log('STATUS: ' + res.statusCode);
-        res.setEncoding('utf8');
-        res.on('data', function(chunk) {
-            data += chunk;
-        });
-        res.on('end', function() {
-            console.log("DONE");
-            let ali = new AliItem(scrape(data.toString()));
-            console.log(ali.toSquareItem().object);
-            resolve({
-                statusCode : 200,
-                headers : {
-                  "Content-type" : "application/json"
-                },
-                body : JSON.stringify(ali)
-              });
-        });
-    });
-    req.end();
-    } else {
-        resolve('something bad happened')
-    }
-    
-});
+exports.get = async (event, context) => AliItem.get(event.queryStringParameters.item);
+// async function get(event) { return AliItem.get(event.queryStringParameters.item) };
+// let event = {};
+// event.queryStringParameters = {};
+// event.queryStringParameters.item=32993495740;
+// let test = await get(event, {});
+// console.log(test);
+module.exports.AliItem = AliItem;
