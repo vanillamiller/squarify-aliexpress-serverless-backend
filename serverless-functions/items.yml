@@ -4,6 +4,7 @@ getAliItem:
       - http:
           method: get
           path: items
+          cors: true
 postSquareItem:
     handler: squareItem.post
     events:
