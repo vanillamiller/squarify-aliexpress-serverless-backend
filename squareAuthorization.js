@@ -5,6 +5,7 @@ const https = require('https');
 
 exports.authorizer = async (event, context) => new Promise((resolve, reject) => {
     
+    const scopes = ['items'];
     const params = {
         host: "connect.squareup.com",
         path: "/oauth2/token",
@@ -30,19 +31,26 @@ exports.authorizer = async (event, context) => new Promise((resolve, reject) => 
             res.on('data', function (chunk) {
             console.log('BODY: ' + chunk);
             body += chunk;
-            resolve({
-              statusCode : 200,
-              headers : {
-                "Content-type" : "application/json"
-              },
-              body : JSON.stringify({
-                message : body
-              })
-            });
              });
             
+             res.on('end', () => {
+              let responseFromSquare = JSON.parse(body);
+              const user = JSON.stringify({squareInfo : responseFromSquare, scopes : scopes});
+              // TODO encrypt the oauth2 token
+              // responseFromSquare.access_token = 
+              resolve({
+                statusCode : 200,
+                headers : {
+                  "Content-type" : "application/json"
+                },
+                body : user
+              });
+   
+            });
         });
         
+        
+
         req.on('error', (e) => {
           reject(e.message);
         });
@@ -52,3 +60,7 @@ exports.authorizer = async (event, context) => new Promise((resolve, reject) => 
     req.end();
     
 });
+
+const createJwt = json => jwt.sign(json, process.env.JWT_KEY, {algorithm : 'RSA256'});
+
+// const verifyJwt = token => jwt.verify

@@ -1,5 +1,5 @@
  authorization:
-    handler: authorization.authorizer
+    handler: squareAuthorization.authorizer
     events: 
       - http:
           method: get

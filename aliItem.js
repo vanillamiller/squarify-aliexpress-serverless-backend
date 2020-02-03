@@ -23,6 +23,7 @@ class AliItem {
         this.images = aliData.imageModule.imagePathList
     }
 
+    // converts the loaded aliItem into a batch upsert body 
     toSquareItem = () => {
         let req = {"idempotency_key" : uuid()};
         let objects = [];
@@ -33,16 +34,22 @@ class AliItem {
             "name" : this.name,
             "description" : this.description,
             "image" : this.image,
-        }
+        };
 
         
-
         if(this.variants.length > 0){
             let addOptions = this.variants.map(v => {
-                let option = {id : `#${v.name.replace(/\s/g, '-')}`, type : "ITEM_OPTION"}
+                // uuid's are used because square options are universal in the backend
+                // where in this case they need to be directly associated with the product 
+                // for demonstration purposes. The standard #name resulted in many clashes.
+                // Many of the tests were done on clothing which have same name SIZE but 
+                // varied in range of sizes.
+                let option = {id : `#${uuid()}`, type : "ITEM_OPTION"}
+                // create list of values that the option holds eg SIZE (ITEM_OPTION) holds S,M,L,XL (ITEM_OPTION_VAL)
                 let values = v.variants.map( w => {
+                    // create the item option value to be added to values array within the options.
                     let info = {
-                        id : `#${w.name.replace(/\s/g, '-')}`,
+                        id : `#${uuid()}`,
                         type : "ITEM_OPTION_VAL",
                         item_option_value_data : {
                             name : w.name
@@ -50,17 +57,18 @@ class AliItem {
                     }
                     return info;
                 });
+                // insert name and option values into item_options_data
                 option.item_option_data={name : v.name, values : values};
-                // option.item_option_data.item_option_data.name = v.name;
-                // option.item_option_data.values = values;
                 return option;
             })
-            // itemData.item_options = addOptions;
+            // spread the different options into batch upsert objects
             objects = [...addOptions];
+            // append the options id to the actual item
             itemData.item_options = addOptions.map(opt => {return {"item_option_id" : opt.id}});
         }
 
-        
+        // insert the item into the batch objects with the accompanying options and return 
+        // the appropriate request body
         object.item_data = itemData;
         objects.push(object);
         req.batches = [{objects: objects}];
