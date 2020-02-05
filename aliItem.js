@@ -6,7 +6,7 @@ const uuid = require('uuid');
 const scrape = (data) => {
     try {
         // remove the dangling comma and all redundant stuff after and return
-        let cleaned = data.match(/data:[\s\S]*?};/g)[0].replace(/[\n\r]/g, '');
+        let cleaned = data.match(/data: \{.*/g)[0].replace(/[\n\r]/g, '');
         return JSON.parse(cleaned.slice(6, cleaned.lastIndexOf('},') + 1));
     } catch (e) {
         // if Aliexpress schema changes will not crash but return JSON parsing error
@@ -26,10 +26,10 @@ class AliItem {
             this.name = aliData.titleModule.subject,
                 this.price = aliData.priceModule.formatedActivityPrice,
                 this.description = aliData.pageModule.description,
-                this.variants = aliData.skuModule.productSKUPropertyList.map((p) => {
+                this.variationType = aliData.skuModule.productSKUPropertyList.map((p) => {
                     let property = {};
                     property.name = p.skuPropertyName;
-                    property.variants = p.skuPropertyValues.map((v) => {
+                    property.variant = p.skuPropertyValues.map((v) => {
                         let variant = {};
                         variant.name = v.propertyValueDisplayName;
                         variant.image = v.skuPropertyImagePath;
