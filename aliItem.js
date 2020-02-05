@@ -126,9 +126,6 @@ class AliItem {
 
         
     }
-
-
-
     // converts the loaded aliItem into a batch upsert body 
     toSquareItem() {
 
@@ -182,13 +179,13 @@ class AliItem {
     }
 }
 
-// exports.get = async (event, context) => AliItem.get(event.queryStringParameters.item);
-async function post(event, context) { console.log(AliItem.fromJson(event)) };
+exports.get = async (event, context) => AliItem.get(event.queryStringParameters.item);
+// async function post(event, context) { console.log(AliItem.fromJson(event)) };
 // let event = {};
 // event.queryStringParameters = {};
 // event.queryStringParameters.item=32993495740;
-let event = testJson;
-console.log(testJson);
-let test = post(event, {});
+// let event = testJson;
+// console.log(testJson);
+// let test = post(event, {});
 // console.log(test);
 module.exports.AliItem = AliItem;
