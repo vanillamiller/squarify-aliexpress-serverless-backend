@@ -2,6 +2,7 @@
 
 const https = require('https');
 const uuid = require('uuid');
+const testJson = require('./fromnet.json')
 
 const scrape = (data) => {
     try {
@@ -18,29 +19,61 @@ class AliItem {
 
     constructor(aliData) {
         // Data scraped from Ali Express
-        let fromAliExpress = aliData.actionModule != null;
-        let fromClient = aliData.submittedItem != null;
+        // if(aliData === undefined){
+
+        // }
+
+        let fromAliExpress =  typeof aliData.actionModule !== "undefined";
+        console.log(fromAliExpress);
+        console.log(aliData.options)
+        let fromClient = typeof aliData.image !== "undefined";
+        console.log(fromClient);
 
         if (fromAliExpress) {
-            this.id = aliData.actionModule.productId,
-            this.name = aliData.titleModule.subject,
-                this.price = aliData.priceModule.formatedActivityPrice,
-                this.description = aliData.pageModule.description,
-                this.variationType = aliData.skuModule.productSKUPropertyList.map((p) => {
-                    let property = {};
-                    property.name = p.skuPropertyName;
-                    property.variant = p.skuPropertyValues.map((v) => {
-                        let variant = {};
-                        variant.name = v.propertyValueDisplayName;
-                        variant.image = v.skuPropertyImagePath;
-                        return variant;
-                    })
-                    return property;
-                }),
+            this.id = aliData.actionModule.productId;
+            this.name = aliData.titleModule.subject;
+            this.price = aliData.priceModule.formatedActivityPrice;
+            this.description = aliData.pageModule.description;
+            let optionsFromNetwork = aliData.skuModule.productSKUPropertyList;
+            this.options = optionsFromNetwork.map((p) => {
+
+                let option = {};
+                option.name = p.skuPropertyName;
+                option.values = p.skuPropertyValues.map((v) => {
+
+                    let value = {};
+                    value.name = v.propertyValueDisplayName;
+                    value.image = v.skuPropertyImagePath;
+                    return value;
+                })
+                return option;
+            }),
                 this.images = aliData.imageModule.imagePathList
+        } else if (fromClient) {
+            this.id = aliData.id;
+            this.name = aliData.name;
+            this.price = aliData.price;
+            this.description = aliData.description;
+            this.options = aliData.options.map((p) => {
+                console.log(p)
+                let option = {};
+                option.name = p.name;
+                option.values = p.values.map((v) => {
+                    let value = {};
+                    value.name = v.propertyValueDisplayName;
+                    value.image = v.skuPropertyImagePath;
+                    return value;
+                })
+                return option;
+            }),
+            this.image = aliData.image;
         }
     };
 
+    static fromJson(json) {
+        return new AliItem(json);
+    }
+    
     static get(itemIdFromEvent) {
 
         return new Promise((resolve, reject) => {
@@ -89,7 +122,12 @@ class AliItem {
             }
 
         });
+
+
+        
     }
+
+
 
     // converts the loaded aliItem into a batch upsert body 
     toSquareItem() {
@@ -105,8 +143,8 @@ class AliItem {
             "description": this.description,
             "image": this.image,
         };
-        if (this.variants.length > 0) {
-            let addOptions = this.variants.map(v => {
+        if (this.options.length > 0) {
+            let addOptions = this.options.map(v => {
                 // uuid's are used because square options are universal in the backend
                 // where in this case they need to be directly associated with the product 
                 // for demonstration purposes. The standard #name resulted in many clashes.
@@ -114,7 +152,7 @@ class AliItem {
                 // varied in range of sizes.
                 let option = { id: `#${uuid()}`, type: "ITEM_OPTION" }
                 // create list of values that the option holds eg SIZE (ITEM_OPTION) holds S,M,L,XL (ITEM_OPTION_VAL)
-                let values = v.variants.map(w => {
+                let values = v.values.map(w => {
                     // create the item option value to be added to values array within the options.
                     let info = {
                         id: `#${uuid()}`,
@@ -144,11 +182,13 @@ class AliItem {
     }
 }
 
-exports.get = async (event, context) => AliItem.get(event.queryStringParameters.item);
-// async function get(event) { return AliItem.get(event.queryStringParameters.item) };
+// exports.get = async (event, context) => AliItem.get(event.queryStringParameters.item);
+async function post(event, context) { console.log(AliItem.fromJson(event)) };
 // let event = {};
 // event.queryStringParameters = {};
 // event.queryStringParameters.item=32993495740;
-// let test = await get(event, {});
+let event = testJson;
+console.log(testJson);
+let test = post(event, {});
 // console.log(test);
 module.exports.AliItem = AliItem;
