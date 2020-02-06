@@ -1,7 +1,10 @@
 'use strict';
 
 const https = require('https');
+const jwt = require('jsonwebtoken');
+class Token {
 
+}
 
 exports.authorizer = async (event, context) => new Promise((resolve, reject) => {
     
@@ -34,15 +37,18 @@ exports.authorizer = async (event, context) => new Promise((resolve, reject) => 
             
              res.on('end', () => {
               let responseFromSquare = JSON.parse(body);
-              const user = JSON.stringify({squareInfo : responseFromSquare, scopes : scopes});
+              let user = {squareInfo : responseFromSquare, scopes : scopes};
+              const tokenTest =  jwt.sign(user, process.env.JWT_KEY, {algorithm : 'RS256'});
+              user.tokenTest=tokenTest;
               // TODO encrypt the oauth2 token
               // responseFromSquare.access_token = 
               resolve({
                 statusCode : 200,
                 headers : {
-                  "Content-type" : "application/json"
+                  "Content-type" : "application/json",
+                  // "Authorization" : `Bearer ${createJwt(user)}`
                 },
-                body : user
+                body : JSON.stringify(user)
               });
             });
         });
@@ -59,6 +65,6 @@ exports.authorizer = async (event, context) => new Promise((resolve, reject) => 
     
 });
 
-const createJwt = json => jwt.sign(json, process.env.JWT_KEY, {algorithm : 'RSA256'});
+const createJwt = json => jwt.sign(json, process.env.JWT_KEY, {algorithm : 'RS256'});
 
 // const verifyJwt = token => jwt.verify

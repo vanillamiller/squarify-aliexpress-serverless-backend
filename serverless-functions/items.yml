@@ -1,5 +1,5 @@
 getAliItem:
-    handler: aliItem.get
+    handler: item.get
     events:
       - http:
           method: get
