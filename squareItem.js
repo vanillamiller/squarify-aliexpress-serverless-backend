@@ -13,7 +13,7 @@ const items = async (event, context) => new Promise((resolve, reject) => {
         headers: {
           "Square-Version" : "2020-01-22",
           "Content-type" : "application/json",
-          "Authorization" : "Bearer EAAAENsJsS5blWbXBwJJqMB97a6teeX8y2JxuBjMO35HZuXUSlN5bIPnqFn1MhJp"
+          "Authorization" : "Bearer xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         }
     };
     
