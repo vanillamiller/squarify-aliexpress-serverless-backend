@@ -1,9 +1,10 @@
 getAliItem:
-    handler: aliItem.get
+    handler: item.get
     events:
       - http:
           method: get
           path: items
+          cors: true
 postSquareItem:
     handler: squareItem.post
     events:
