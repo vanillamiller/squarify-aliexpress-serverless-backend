@@ -18,13 +18,18 @@ const scrape = (data) => {
 class Item {
 
     constructor(aliData) {
-        // Data scraped from Ali Express
-        // if(aliData === undefined){
-
-        // }
-
-        let fromAliExpress =  typeof aliData.actionModule !== "undefined";
-        let fromClient = typeof aliData.image !== "undefined";
+        
+        let fromAliExpress, fromClient;
+        
+        if(typeof aliData !== "undefined"){
+            fromAliExpress =  typeof aliData.actionModule !== "undefined";
+            fromClient = typeof aliData.id !== "undefined";
+        }else{
+             fromAliExpress = false;
+             fromClient = false;
+        }
+        
+        
 
         if (fromAliExpress) {
             this.id = aliData.actionModule.productId;
@@ -42,30 +47,24 @@ class Item {
                     value.name = v.propertyValueDisplayName;
                     value.image = v.skuPropertyImagePath;
                     return value;
+
                 })
                 return option;
             }),
                 this.images = aliData.imageModule.imagePathList
+        
         } else if (fromClient) {
             this.id = aliData.id;
             this.name = aliData.name;
             this.price = aliData.price;
             this.description = aliData.description;
-            this.options = aliData.options.map((p) => {
-                console.log(p)
-                let option = {};
-                option.name = p.name;
-                option.values = p.values.map((v) => {
-                    let value = {};
-                    value.name = v.name;
-                    value.image = v.image;
-                    return value;
-                })
-                return option;
-            }),
+            this.options = aliData.options
             this.image = aliData.image;
-        }
-    };
+        } else {
+            
+            console.log('nothing going in')
+        }}
+    
 
     static fromJson(json) {
         return new Item(json);
@@ -141,7 +140,7 @@ class Item {
                 // Many of the tests were done on clothing which have same name SIZE but 
                 // varied in range of sizes.
                 let option = { id: `#${uuid()}`, type: "ITEM_OPTION" }
-                console.log("here is what it thinks values is: " +JSON.stringify(v.values));
+                // console.log("here is what it thinks values is: " +JSON.stringify(v.values));
                 // create list of values that the option holds eg SIZE (ITEM_OPTION) holds S,M,L,XL (ITEM_OPTION_VAL)
                 let values = v.values.map(w => {
                     // create the item option value to be added to values array within the options.
@@ -156,7 +155,7 @@ class Item {
                     return info;
                 });
                 // insert name and option values into item_options_data
-                option.item_option_data = { name: v.name, values: values };
+                option.item_option_data = { name: `${v.name} FOR: ${this.name}`, values: values, display_name : v.name };
                 return option;
             })
             // spread the different options into batch upsert objects
@@ -175,12 +174,4 @@ class Item {
 }
 
 exports.get = async (event, context) => Item.get(event.queryStringParameters.item);
-// async function post(event, context) { console.log(Item.fromJson(event)) };
-// let event = {};
-// event.queryStringParameters = {};
-// event.queryStringParameters.item=32993495740;
-// let event = testJson;
-// console.log(testJson);
-// let test = post(event, {});
-// console.log(test);
 module.exports.Item = Item;
