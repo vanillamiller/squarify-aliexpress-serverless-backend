@@ -24,10 +24,7 @@ class Item {
         // }
 
         let fromAliExpress =  typeof aliData.actionModule !== "undefined";
-        console.log(fromAliExpress);
-        console.log(aliData.options)
         let fromClient = typeof aliData.image !== "undefined";
-        console.log(fromClient);
 
         if (fromAliExpress) {
             this.id = aliData.actionModule.productId;
@@ -60,8 +57,8 @@ class Item {
                 option.name = p.name;
                 option.values = p.values.map((v) => {
                     let value = {};
-                    value.name = v.propertyValueDisplayName;
-                    value.image = v.skuPropertyImagePath;
+                    value.name = v.name;
+                    value.image = v.image;
                     return value;
                 })
                 return option;
@@ -144,9 +141,11 @@ class Item {
                 // Many of the tests were done on clothing which have same name SIZE but 
                 // varied in range of sizes.
                 let option = { id: `#${uuid()}`, type: "ITEM_OPTION" }
+                console.log("here is what it thinks values is: " +JSON.stringify(v.values));
                 // create list of values that the option holds eg SIZE (ITEM_OPTION) holds S,M,L,XL (ITEM_OPTION_VAL)
                 let values = v.values.map(w => {
                     // create the item option value to be added to values array within the options.
+                    // console.log("here is what it thinks value is: " + JSON.stringify(w));
                     let info = {
                         id: `#${uuid()}`,
                         type: "ITEM_OPTION_VAL",
