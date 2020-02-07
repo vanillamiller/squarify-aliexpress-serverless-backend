@@ -2,7 +2,6 @@
 
 const https = require('https');
 const uuid = require('uuid');
-const testJson = require('./fromnet.json')
 
 const scrape = (data) => {
     try {

@@ -22,7 +22,7 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
         headers: {
           "Square-Version" : "2020-01-22",
           "Content-type" : "application/json",
-          "Authorization" : "Bearer EAAAENsJsS5blWbXBwJJqMB97a6teeX8y2JxuBjMO35HZuXUSlN5bIPnqFn1MhJp"
+          "Authorization" : "Bearer EAAAEPdYYlfwYBkeoo2re4kGfW508rVzBIkfZ-wwkt-G1C224YNCCxta_Wd6Yknk"
         }
     };
     
@@ -47,11 +47,18 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
               body : resbody
             }));
             
+      res.on('error', (e) => {
+          reject({
+              statusCode : res.statusCode,
+              headers : {
+                'Access-Control-Allow-Origin': '*',
+                'Content-type' : 'application/json'
+              },
+              body : resbody
+            });
         });
-        
-        req.on('error', (e) => {
-          reject(e.message);
-        });
+            
+    });
         
     // send the request
     req.write(body);
