@@ -1,12 +1,12 @@
 getAliItem:
-    handler: serverless-functions/items/item.get
+    handler: ./serverless-functions/items/item.get
     events:
       - http:
           method: get
           path: items
           cors: true
 postSquareItem:
-    handler: serverless-functions/items/postSquareItem.post
+    handler: ./serverless-functions/items/postSquareItem.post
     events:
       - http:
           method: post

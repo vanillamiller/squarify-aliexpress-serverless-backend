@@ -1,5 +1,5 @@
  authorization:
-    handler: serverless-functions/auth/squareAuthorization.authorizer
+    handler: ./serverless-functions/auth/squareAuthorization.authorizer
     events: 
       - http:
           method: get

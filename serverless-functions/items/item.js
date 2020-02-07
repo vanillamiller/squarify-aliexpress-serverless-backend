@@ -172,5 +172,5 @@ class Item {
     }
 }
 
-exports.get = async (event, context) => Item.get(event.queryStringParameters.item);
+exports.get = async (event, context) => await Item.get(event.queryStringParameters.item);
 module.exports.Item = Item;
