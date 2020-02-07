@@ -17,18 +17,18 @@ const scrape = (data) => {
 class Item {
 
     constructor(aliData) {
-        
+
         let fromAliExpress, fromClient;
-        
-        if(typeof aliData !== "undefined"){
-            fromAliExpress =  typeof aliData.actionModule !== "undefined";
+
+        if (typeof aliData !== "undefined") {
+            fromAliExpress = typeof aliData.actionModule !== "undefined";
             fromClient = typeof aliData.id !== "undefined";
-        }else{
-             fromAliExpress = false;
-             fromClient = false;
+        } else {
+            fromAliExpress = false;
+            fromClient = false;
         }
-        
-        
+
+
 
         if (fromAliExpress) {
             this.id = aliData.actionModule.productId;
@@ -51,7 +51,7 @@ class Item {
                 return option;
             }),
                 this.images = aliData.imageModule.imagePathList
-        
+
         } else if (fromClient) {
             this.id = aliData.id;
             this.name = aliData.name;
@@ -60,62 +60,9 @@ class Item {
             this.options = aliData.options
             this.image = aliData.image;
         } else {
-            
-            console.log('nothing going in')
-        }}
-    
-
-    static fromJson(json) {
-        return new Item(json);
-    }
-    
-    static get(itemIdFromEvent) {
-
-        return new Promise((resolve, reject) => {
-
-            let itemId = false;
-
-            try {
-                itemId = itemIdFromEvent;
-            } catch (e) {
-                itemId = false;
-            }
-
-            if (itemId) {
-                const params = {
-                    host: "www.aliexpress.com",
-                    path: `/item/${itemId}.html`,
-                    port: 443,
-                    method: "GET",
-                };
 
 
-                const req = https.request(params, function (res) {
-                    let data = '';
-                    console.log('STATUS: ' + res.statusCode);
-                    res.setEncoding('utf8');
-                    res.on('data', function (chunk) {
-                        data += chunk;
-                    });
-                    res.on('end', function () {
-                        // console.log(scrape(data.toString()));
-                        let ali = new Item(scrape(data.toString()));
-                        // console.log(ali.toSquareItem());
-                        resolve({
-                            statusCode: 200,
-                            headers: {
-                                'Access-Control-Allow-Origin': '*',
-                                'Access-Control-Allow-Credentials': true,
-                            },
-                            body: JSON.stringify(ali)
-                        });
-                    });
-                });
-                req.end();
-            } else {
-                resolve('something bad happened')
-            }
-        });
+        }
     }
     // converts the loaded aliItem into a batch upsert body 
     toSquareItem() {
@@ -154,7 +101,7 @@ class Item {
                     return info;
                 });
                 // insert name and option values into item_options_data
-                option.item_option_data = { name: `${v.name} FOR: ${this.name}`, values: values, display_name : v.name };
+                option.item_option_data = { name: `${v.name} FOR: ${this.name}`, values: values, display_name: v.name };
                 return option;
             })
             // spread the different options into batch upsert objects
@@ -162,7 +109,6 @@ class Item {
             // append the options id to the actual item
             itemData.item_options = addOptions.map(opt => { return { "item_option_id": opt.id } });
         }
-
         // insert the item into the batch objects with the accompanying options and return 
         // the appropriate request body
         object.item_data = itemData;
@@ -172,5 +118,84 @@ class Item {
     }
 }
 
-exports.get = async (event, context) => await Item.get(event.queryStringParameters.item);
+const badPathResponse = {
+    statusCode: 502,
+    headers: {
+        "Content-type": "application/json"
+    },
+    body: JSON.stringify({ message: "no item requested" })
+}
+
+exports.get = async (event, context) => await new Promise((resolve, reject) => {
+
+    if (event.queryStringParameters == null) {
+        resolve(badPathResponse);
+    }
+    if (event.queryStringParameters.item == null) {
+        resolve(badPathResponse);
+    }
+
+    let itemId = event.queryStringParameters.item;
+
+    // try {
+    //     itemId = event.queryStringParameters.item;
+    //     throw new Error("there was no item requested")
+    // } catch (e) {
+    //     reject({
+    //         statusCode : 502,
+    //         headers : {
+    //             "Content-type" : "application/json"
+    //         },
+    //         body : e.message
+    //     });
+    // }
+
+    if (itemId) {
+        const params = {
+            host: "www.aliexpress.com",
+            path: `/item/${itemId}.html`,
+            port: 443,
+            method: "GET",
+        };
+
+
+        const req = https.request(params, function (res) {
+            let data = '';
+            console.log('STATUS: ' + res.statusCode);
+            res.setEncoding('utf8');
+            res.on('data', function (chunk) {
+                data += chunk;
+            });
+            res.on('end', function () {
+                // console.log(scrape(data.toString()));
+                let ali = new Item(scrape(data.toString()));
+                if(ali == {}){
+                    reject({
+
+                    });
+                }
+                // console.log(ali.toSquareItem());
+                resolve({
+                    statusCode: 200,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Credentials': true,
+                    },
+                    body: JSON.stringify(ali)
+                });
+            });
+        });
+
+        req.end();
+        req.on('error', (e) => reject({
+            statusCode: 501,
+            headers: {
+                "Content-type": "application/json"
+            },
+            body: JSON.stringify({ message: "request couldnt go thru" })
+        }))
+    } else {
+        resolve('something bad happened')
+    }
+});
 module.exports.Item = Item;
