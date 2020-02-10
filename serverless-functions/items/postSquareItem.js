@@ -3,15 +3,18 @@
 const https = require('https');
 let Item = require('./item.js').Item;
 
+const real = "squareup";
+const sandbox = "squareupsandbox";
+
 const params = {
-  host: "connect.squareupsandbox.com",
+  host: `connect.${sandbox}.com`,
   path: "/v2/catalog/batch-upsert",
   port: 443,
   method: "POST",
   headers: {
     "Square-Version" : "2020-01-22",
     "Content-type" : "application/json",
-    "Authorization" : "Bearer x"
+    "Authorization" : "Bearer EAAAENsJsS5blWbXBwJJqMB97a6teeX8y2JxuBjMO35HZuXUSlN5bIPnqFn1MhJp"
   }
 };
 

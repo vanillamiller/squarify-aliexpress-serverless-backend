@@ -2,18 +2,6 @@
 
 const https = require('https');
 const uuid = require('uuid');
-
-const scrape = (data) => {
-    try {
-        // remove the dangling comma and all redundant stuff after and return
-        let cleaned = data.match(/data: \{.*/g)[0].replace(/[\n\r]/g, '');
-        return JSON.parse(cleaned.slice(6, cleaned.lastIndexOf('},') + 1));
-    } catch (e) {
-        // if Aliexpress schema changes will not crash but return JSON parsing error
-        return e;
-    }
-}
-
 class Item {
 
     constructor(aliData) {
@@ -126,7 +114,18 @@ const badPathResponse = {
     body: JSON.stringify({ message: "no item requested" })
 }
 
-exports.get = async (event, context) => await new Promise((resolve, reject) => {
+const scrape = (data) => {
+    try {
+        // remove the dangling comma and all redundant stuff after and return
+        let cleaned = data.match(/data: \{.*/g)[0].replace(/[\n\r]/g, '');
+        return JSON.parse(cleaned.slice(6, cleaned.lastIndexOf('},') + 1));
+    } catch (e) {
+        // if Aliexpress schema changes will not crash but return JSON parsing error
+        return e;
+    }
+}
+
+exports.get = async (event, context, callback) => new Promise((resolve, reject) => {
 
     if (event.queryStringParameters == null) {
         resolve(badPathResponse);
@@ -137,65 +136,48 @@ exports.get = async (event, context) => await new Promise((resolve, reject) => {
 
     let itemId = event.queryStringParameters.item;
 
-    // try {
-    //     itemId = event.queryStringParameters.item;
-    //     throw new Error("there was no item requested")
-    // } catch (e) {
-    //     reject({
-    //         statusCode : 502,
-    //         headers : {
-    //             "Content-type" : "application/json"
-    //         },
-    //         body : e.message
-    //     });
-    // }
 
-    if (itemId) {
-        const params = {
-            host: "www.aliexpress.com",
-            path: `/item/${itemId}.html`,
-            port: 443,
-            method: "GET",
-        };
+    const params = {
+        host: "www.aliexpress.com",
+        path: `/item/${itemId}.html`,
+        port: 443,
+        method: "GET",
+    };
 
-
-        const req = https.request(params, function (res) {
-            let data = '';
-            console.log('STATUS: ' + res.statusCode);
-            res.setEncoding('utf8');
-            res.on('data', function (chunk) {
-                data += chunk;
-            });
-            res.on('end', function () {
-                // console.log(scrape(data.toString()));
-                let ali = new Item(scrape(data.toString()));
-                if(ali == {}){
-                    reject({
-
-                    });
-                }
-                // console.log(ali.toSquareItem());
+    const req = https.request(params, function (res) {
+        let data = '';
+        console.log('STATUS: ' + res.statusCode);
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+            data += chunk;
+        });
+        res.on('end', function () {
+            // console.log(scrape(data.toString()));
+            let ali = new Item(scrape(data.toString()));
+            if (ali == {}) {
                 resolve({
-                    statusCode: 200,
-                    headers: {
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Credentials': true,
-                    },
-                    body: JSON.stringify(ali)
+                    
                 });
+            }
+            // console.log(ali.toSquareItem());
+            resolve({
+                statusCode: 200,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Credentials': true,
+                },
+                body: JSON.stringify(ali)
             });
         });
+    }).on('error', (e) => resolve({
+        statusCode: 501,
+        headers: {
+            "Content-type": "application/json"
+        },
+        body: JSON.stringify({ message: "request couldnt go thru" })
+    }));
 
-        req.end();
-        req.on('error', (e) => reject({
-            statusCode: 501,
-            headers: {
-                "Content-type": "application/json"
-            },
-            body: JSON.stringify({ message: "request couldnt go thru" })
-        }))
-    } else {
-        resolve('something bad happened')
-    }
-});
+    req.end();
+
+}).then((res) => callback(null, res));
 module.exports.Item = Item;
