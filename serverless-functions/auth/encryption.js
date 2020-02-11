@@ -1,37 +1,41 @@
-// const crypto = require('crypto');
-// const algorithm = 'aes-256-cbc';
-// const key = 'z%C*F-JaNdRgUjXn2r5u8x/A?D(G+KbP';
-// console.log(key.toString());
-// const iv = 'dd313462cc5f01af6e7ba5196cd96f3e'
-// iv = iv.hexEncode();
-// console.log(iv);
+const crypto = require('crypto');
 
-// /**
-//  * 
-//  * @param {String} text string to be encrypted
-//  * @return {}
-//  * encrypts ouath2 keys that are sent within the jwt
-//  */
-// function encrypt(text) {
-//   const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-//   let encrypted = cipher.update(text);
-//   encrypted = Buffer.concat([encrypted, cipher.final()]);
-//   return {iv: iv.toString('hex'), encryptedData: encrypted.toString('hex')};
-// }
+module.exports = {
 
-// /**
-//  * 
-//  * @param {*} text 
-//  */
-// function decrypt(text) {
-//   const iv = Buffer.from(text.iv, 'hex');
-//   const encryptedText = Buffer.from(text.encryptedData, 'hex');
-//   const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-//   let decrypted = decipher.update(encryptedText);
-//   decrypted = Buffer.concat([decrypted, decipher.final()]);
-//   return decrypted.toString();
-// }
+    /**
+     * Encrypts text by given key
+     * @param String text to encrypt
+     * @param Buffer masterkeyBuffer
+     * @returns String encrypted text, base64 encoded
+     */
+    encrypt: (text, masterkeyBuffer) => {
+        const iv = crypto.randomBytes(16);
+        const salt = crypto.randomBytes(64);
+        const key = crypto.pbkdf2Sync(masterkeyBuffer, salt, 2145, 32, 'sha512');
 
-// const hw = encrypt('Some serious stuff');
-// console.log(hw);
-// console.log(decrypt(hw));
+        const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+        const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
+        const tag = cipher.getAuthTag();
+        return Buffer.concat([salt, iv, tag, encrypted]).toString('base64');
+    },
+
+    /**
+     * Decrypts text by given key
+     * @param String base64 encoded input data
+     * @param Buffer masterkeyBuffer
+     * @returns String decrypted (original) text
+     */
+    decrypt: (encdata, masterkeyBuffer) => {
+        const bData = Buffer.from(encdata, 'base64');
+        const salt = bData.slice(0, 64);
+        const iv = bData.slice(64, 80);
+        const tag = bData.slice(80, 96);
+        const text = bData.slice(96);
+        const key = crypto.pbkdf2Sync(masterkeyBuffer, salt , 2145, 32, 'sha512');
+
+        const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+        decipher.setAuthTag(tag);
+        const decrypted = decipher.update(text, 'binary', 'utf8') + decipher.final('utf8');
+        return decrypted;
+    }
+};

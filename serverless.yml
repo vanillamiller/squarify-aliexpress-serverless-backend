@@ -13,12 +13,8 @@
 
 service: squarify-aliexpress
 # app and org for use with dashboard.serverless.com
-# app: squarify-aliexpress-app
-# org: agmiller794
-
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
-# frameworkVersion: "=X.X.X"
+# app: xxxxxxxxxxx
+# org: xxxxxxxxxxx
 
 provider:
   name: aws
@@ -27,6 +23,7 @@ provider:
     CLIENT_ID : "x"
     CLIENT_SECRET : "x"
     JWT_KEY: "x"
+    MASTER_KEY: "x"
   region: ap-southeast-2
 
 functions:

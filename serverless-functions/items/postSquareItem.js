@@ -3,22 +3,25 @@
 const https = require('https');
 let Item = require('./item.js').Item;
 
+const real = "squareup";
+const sandbox = "squareupsandbox";
+
 const params = {
-  host: "connect.squareupsandbox.com",
+  host: `connect.${sandbox}.com`,
   path: "/v2/catalog/batch-upsert",
   port: 443,
   method: "POST",
   headers: {
     "Square-Version" : "2020-01-22",
     "Content-type" : "application/json",
-    "Authorization" : "Bearer EAAAENsJsS5blWbXBwJJqMB97a6teeX8y2JxuBjMO35HZuXUSlN5bIPnqFn1MhJp"
+    "Authorization" : "Bearer x"
   }
 };
 
 exports.post = async (event, context, callback) => new Promise((resolve, reject) => {
 
     const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
-    const body = JSON.stringify(Item.fromJson(itemFromEventJson).toSquareItem());
+    const body = JSON.stringify(new Item(itemFromEventJson).toSquareItem());
     
     const req = https.request(params, (res) => {
       let resbody = '';
