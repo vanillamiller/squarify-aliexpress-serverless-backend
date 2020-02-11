@@ -23,6 +23,7 @@ provider:
     CLIENT_ID : "sq0idp-xt-Zcw3N2Fx4I-CIbh86Bg"
     CLIENT_SECRET : "sq0csp-7mWrrUpkEsHpdEAeHGyD6onqzKaj5mFKu16cXjqN49Q"
     JWT_KEY: "z%C*F-JaNdRgUjXn2r5u8x/A?D(G+KbP"
+    MASTER_KEY: "KaPdSgVkYp3s6v8y/B?E(H+MbQeThWmZ"
   region: ap-southeast-2
 
 functions:

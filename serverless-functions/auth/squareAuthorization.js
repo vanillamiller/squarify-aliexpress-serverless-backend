@@ -2,7 +2,8 @@
 
 const https = require('https');
 const jwt = require('jsonwebtoken');
-const encryptionKey = '';
+const encrypt = require('./encryption').encrypt;
+const encryptionKey = Buffer.from(process.env.MASTER_KEY, 'hex');
 const scopes = ['items'];
 const params = {
   host: "connect.squareup.com",
@@ -34,6 +35,8 @@ exports.authorizer = async (event, context) => await new Promise((resolve, rejec
 
     res.on('end', () => {
       let responseFromSquare = JSON.parse(body);
+      responseFromSquare.access_token = encrypt(responseFromSquare.access_token, encryptionKey);
+      responseFromSquare.refresh_token = encrypt(responseFromSquare.refresh_token, encryptionKey);
       let user = { squareInfo: responseFromSquare, scopes: scopes };
       // TODO encrypt the oauth2 token
       // responseFromSquare.access_token = 
@@ -50,7 +53,9 @@ exports.authorizer = async (event, context) => await new Promise((resolve, rejec
 
 
   req.on('error', (e) => {
-    reject({ e });
+    resolve({statusCode : 500,
+          headers : {"Content-type" : "application/json"},
+          body : JSON.stringify({message : 'could not request access from square'})});
   });
 
   // send the request
