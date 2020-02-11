@@ -2,6 +2,7 @@
 
 const https = require('https');
 const jwt = require('jsonwebtoken');
+const encryptionKey = '';
 const scopes = ['items'];
 const params = {
   host: "connect.squareup.com",
