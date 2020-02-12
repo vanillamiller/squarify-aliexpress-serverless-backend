@@ -1,17 +1,20 @@
 'use strict'
-const jwt = require('jsonwebtoken');
+const jwt = require('./jwtModule.js');
 
 exports.authorizer = async function (event) {
-   const token = event.authorizationToken.toLowerCase();
-   const decodedToken = jwt.verify(token, process.env.JWT_KEY);
+   const token = event.authorizationToken;
    const methodArn = event.methodArn;
-
-   switch (token) {
-       case 'allow':
-           return generateAuthResponse('user', 'Allow', methodArn);
-       default:
-           return generateAuthResponse('user', 'Deny', methodArn);
-   }
+     if(token!==undefined){
+        try{
+            const decoded = jwt.verify(token);
+            if(decoded.scopes.includes('items')){
+                let user = decoded.squareInfo.merchant_id;
+                return generateAuthResponse(user, 'Allow', methodArn);
+            }
+     } catch(e){
+         return generateAuthResponse('user', 'Deny', methodArn);
+     }}
+     return generateAuthResponse('user', 'Deny', methodArn);
 }
 
 function generateAuthResponse(principalId, effect, methodArn) {
