@@ -4,24 +4,24 @@ const https = require('https');
 const uuid = require('uuid');
 class Item {
 
-    constructor(aliData) {
+    constructor(jsonData) {
 
         let fromAliExpress, fromClient;
 
-        if (typeof aliData !== "undefined") {
-            fromAliExpress = typeof aliData.actionModule !== "undefined";
-            fromClient = typeof aliData.id !== "undefined";
+        if (typeof jsonData !== "undefined") {
+            fromAliExpress = typeof jsonData.actionModule !== "undefined";
+            fromClient = typeof jsonData.id !== "undefined";
         } else {
             fromAliExpress = false;
             fromClient = false;
         }
 
         if (fromAliExpress) {
-            this.id = aliData.actionModule.productId;
-            this.name = aliData.titleModule.subject;
-            this.price = aliData.priceModule.formatedActivityPrice;
-            this.description = aliData.pageModule.description;
-            let optionsFromNetwork = aliData.skuModule.productSKUPropertyList;
+            this.id = jsonData.actionModule.productId;
+            this.name = jsonData.titleModule.subject;
+            this.price = jsonData.priceModule.formatedActivityPrice;
+            this.description = jsonData.pageModule.description;
+            let optionsFromNetwork = jsonData.skuModule.productSKUPropertyList;
             this.options = optionsFromNetwork.map((p) => {
 
                 let option = {};
@@ -36,15 +36,15 @@ class Item {
                 })
                 return option;
             }),
-                this.images = aliData.imageModule.imagePathList
+                this.images = jsonData.imageModule.imagePathList
 
         } else if (fromClient) {
-            this.id = aliData.id;
-            this.name = aliData.name;
-            this.price = aliData.price;
-            this.description = aliData.description;
-            this.options = aliData.options
-            this.image = aliData.image;
+            this.id = jsonData.id;
+            this.name = jsonData.name;
+            this.price = jsonData.price;
+            this.description = jsonData.description;
+            this.options = jsonData.options
+            this.image = jsonData.image;
         } else {
 
 
@@ -178,4 +178,5 @@ exports.get = async (event, context, callback) => new Promise((resolve, reject) 
     req.end();
 
 }).then((res) => callback(null, res));
+
 module.exports.Item = Item;

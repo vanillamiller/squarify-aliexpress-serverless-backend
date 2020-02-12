@@ -9,14 +9,13 @@ const real = "squareup";
 const sandbox = "squareupsandbox";
 
 let params = {
-  host: `connect.${sandbox}.com`,
+  host: `connect.${real}.com`,
   path: "/v2/catalog/batch-upsert",
   port: 443,
   method: "POST",
   headers: {
     "Square-Version" : "2020-01-22",
     "Content-type" : "application/json",
-    // "Authorization" : "Bearer EAAAENsJsS5blWbXBwJJqMB97a6teeX8y2JxuBjMO35HZuXUSlN5bIPnqFn1MhJp"
   }
 };
 
@@ -24,7 +23,7 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
 
     const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
     const body = JSON.stringify(new Item(itemFromEventJson).toSquareItem());
-    const encodedjwt = event.authorizationToken;
+    const encodedjwt = event['headers']['authorization'];
     let decodedjwt;
 
     try{
@@ -68,5 +67,11 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
     // send the request
     req.write(body);
     req.end();
+    // resolve({
+    //   statusCode : 200,
+    //   body : JSON.stringify({
+    //     event : event,
+    //     token : encodedjwt})
+    // });
     
 });
