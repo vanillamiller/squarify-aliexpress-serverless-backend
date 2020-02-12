@@ -4,7 +4,6 @@ const https = require('https');
 const jwt = require('./jwtModule');
 const encrypt = require('./encryption').encrypt;
 
-const encryptionKey = Buffer.from(process.env.MASTER_KEY, 'hex');
 const scopes = ['items'];
 const params = {
   host: "connect.squareup.com",
@@ -35,18 +34,25 @@ exports.authorizer = async (event, context) => await new Promise((resolve, rejec
     });
 
     res.on('end', () => {
+      // parse square response
       let responseFromSquare = JSON.parse(body);
+
+      // encrypt Oaut2 keys before sending to client
       responseFromSquare.access_token = encrypt(responseFromSquare.access_token, encryptionKey);
       responseFromSquare.refresh_token = encrypt(responseFromSquare.refresh_token, encryptionKey);
+
+      // package as jwt payload and sign
       let user = { squareInfo: responseFromSquare, scopes: scopes };
-      // TODO encrypt the oauth2 token
-      // responseFromSquare.access_token = 
+      let token = jwt.sign(user);
+
+      // redirect to the authorization fronend redirect
       resolve({
-        statusCode: 200,
+        statusCode: 302,
         headers: {
           "Content-type": "application/json",
+          "location" : `https://square-459ed.web.app/#/authorize?token=${token}`
         },
-        body: JSON.stringify(user)
+        // body: JSON.stringify({'user' : user, 'token' : token})
       });
     });
   });

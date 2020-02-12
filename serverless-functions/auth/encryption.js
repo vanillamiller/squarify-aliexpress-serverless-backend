@@ -1,14 +1,14 @@
 const crypto = require('crypto');
+const masterkeyBuffer = Buffer.from(process.env.MASTER_KEY, 'hex');
 
 module.exports = {
-
     /**
      * Encrypts text by given key
      * @param String text to encrypt
      * @param Buffer masterkeyBuffer
      * @returns String encrypted text, base64 encoded
      */
-    encrypt: (text, masterkeyBuffer) => {
+    encrypt: (text) => {
         const iv = crypto.randomBytes(16);
         const salt = crypto.randomBytes(64);
         const key = crypto.pbkdf2Sync(masterkeyBuffer, salt, 2145, 32, 'sha512');
@@ -25,7 +25,7 @@ module.exports = {
      * @param Buffer masterkeyBuffer
      * @returns String decrypted (original) text
      */
-    decrypt: (encdata, masterkeyBuffer) => {
+    decrypt: (encdata) => {
         const bData = Buffer.from(encdata, 'base64');
         const salt = bData.slice(0, 64);
         const iv = bData.slice(64, 80);
