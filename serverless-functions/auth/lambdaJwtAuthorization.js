@@ -1,5 +1,5 @@
 'use strict'
-const jwt = require('jsonwebtoken');
+const jwt = require('./jwtModule.js');
 
 exports.authorizer = async function (event) {
    const token = event.authorizationToken.toLowerCase();

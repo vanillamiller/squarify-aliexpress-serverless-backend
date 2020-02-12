@@ -1,8 +1,9 @@
 'use strict';
 
 const https = require('https');
-const jwt = require('jsonwebtoken');
+const jwt = require('./jwtModule');
 const encrypt = require('./encryption').encrypt;
+
 const encryptionKey = Buffer.from(process.env.MASTER_KEY, 'hex');
 const scopes = ['items'];
 const params = {
@@ -49,19 +50,14 @@ exports.authorizer = async (event, context) => await new Promise((resolve, rejec
       });
     });
   });
-
-
-
   req.on('error', (e) => {
     resolve({statusCode : 500,
           headers : {"Content-type" : "application/json"},
           body : JSON.stringify({message : 'could not request access from square'})});
   });
-
   // send the request
   req.write(body);
   req.end();
-
 });
 
 // const createJwt = json => jwt.sign(json, process.env.JWT_KEY, {algorithm : 'RS256'});
