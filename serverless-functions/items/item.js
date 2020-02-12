@@ -136,7 +136,6 @@ exports.get = async (event, context, callback) => new Promise((resolve, reject) 
 
     let itemId = event.queryStringParameters.item;
 
-
     const params = {
         host: "www.aliexpress.com",
         path: `/item/${itemId}.html`,

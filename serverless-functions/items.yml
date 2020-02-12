@@ -5,6 +5,7 @@ getAliItem:
           method: get
           path: items
           cors: true
+          authorizer: lambdaAuthorizerItemsReadItemsWrite
 postSquareItem:
     handler: ./serverless-functions/items/postSquareItem.post
     events:
@@ -12,3 +13,7 @@ postSquareItem:
           method: post
           path: items
           cors: true
+          authorizer: lambdaAuthorizerItemsReadItemsWrite
+
+lambdaAuthorizerItemsReadItemsWrite:
+  handler: ./serverless-functions/auth/lambdaJwtAuthorization.authorizer
