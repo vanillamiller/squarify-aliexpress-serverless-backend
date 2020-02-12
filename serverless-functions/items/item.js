@@ -16,8 +16,6 @@ class Item {
             fromClient = false;
         }
 
-
-
         if (fromAliExpress) {
             this.id = aliData.actionModule.productId;
             this.name = aliData.titleModule.subject;
@@ -155,7 +153,8 @@ exports.get = async (event, context, callback) => new Promise((resolve, reject) 
             let ali = new Item(scrape(data.toString()));
             if (ali == {}) {
                 resolve({
-                    
+                    statusCode : 200,
+
                 });
             }
             // console.log(ali.toSquareItem());
