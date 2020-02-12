@@ -2,16 +2,18 @@
 const jwt = require('./jwtModule.js');
 
 exports.authorizer = async function (event) {
-   const token = event.authorizationToken.toLowerCase();
-   const decodedToken = jwt.verify(token, process.env.JWT_KEY);
+   const token = event.authorizationToken;
+//    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
    const methodArn = event.methodArn;
-
-   switch (token) {
-       case 'allow':
-           return generateAuthResponse('user', 'Allow', methodArn);
-       default:
-           return generateAuthResponse('user', 'Deny', methodArn);
-   }
+     try{
+        const decoded = jwt.verify(token);
+        if(decoded.scopes.includes('items')){
+            let user = decoded.squareInfo.merchant_id;
+            return generateAuthResponse(user, 'Allow', methodArn);
+        }
+     } catch(e){
+         return generateAuthResponse(user, 'Deny', methodArn);
+     }
 }
 
 function generateAuthResponse(principalId, effect, methodArn) {
