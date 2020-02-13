@@ -123,7 +123,7 @@ const scrape = (data) => {
     }
 }
 
-exports.get = async (event, context, callback) => new Promise((resolve, reject) => {
+exports.get = async (event, context, callback) => await new Promise((resolve, reject) => {
 
     if (event.queryStringParameters == null) {
         resolve(badPathResponse);
@@ -143,26 +143,18 @@ exports.get = async (event, context, callback) => new Promise((resolve, reject) 
 
     const req = https.request(params, function (res) {
         let data = '';
-        console.log('STATUS: ' + res.statusCode);
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
             data += chunk;
         });
         res.on('end', function () {
-            // console.log(scrape(data.toString()));
             let ali = new Item(scrape(data.toString()));
-            if (ali == {}) {
-                resolve({
-                    statusCode : 200,
-
-                });
-            }
-            // console.log(ali.toSquareItem());
             resolve({
                 statusCode: 200,
                 headers: {
                     'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Credentials': true,
+                    // 'Access-Control-Allow-Credentials': true,
+                    'Content-type' : 'application/json'
                 },
                 body: JSON.stringify(ali)
             });

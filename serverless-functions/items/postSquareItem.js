@@ -23,7 +23,7 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
 
     const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
     const body = JSON.stringify(new Item(itemFromEventJson).toSquareItem());
-    const encodedjwt = event['headers']['authorization'];
+    const encodedjwt = event['headers']['Authorization'];
     let decodedjwt;
 
     try{
@@ -42,21 +42,20 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
       let resbody = '';
       res.on('data', function (chunk) {
               resbody += chunk;
-            console.log(resbody);
             });
              
       res.on('end', (chunk) => 
       resolve({statusCode : res.statusCode,
               headers : {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Credentials': true,
+                // 'Access-Control-Allow-Credentials': true,
                 'Content-type' : 'application/json'
               },
               body : resbody
           }));
             
     }).on('error', (e) => {
-      reject({
+      resolve({
         statusCode : req.statusCode,
         headers : {
           'Content-type' : 'application/json'
@@ -70,9 +69,13 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
     req.end();
     // resolve({
     //   statusCode : 200,
+    //   headers : {
+    //                 'Access-Control-Allow-Origin': '*',
+    //                 'Access-Control-Allow-Credentials': true,
+    //                 'Content-type' : 'application/json'
+    //               },
     //   body : JSON.stringify({
-    //     event : event,
-    //     token : encodedjwt})
+    //     event : event})
     // });
     
 });

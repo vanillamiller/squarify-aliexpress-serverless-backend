@@ -40,3 +40,15 @@ function generatePolicyDocument(effect, methodArn) {
 
    return policyDocument;
 }
+
+exports.test = async function(event) {
+    // const foo = event['headers']['Authorization'];
+    const res = {
+        statusCode : 200,
+        headers : {"Content-type" : "application/json",
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,},
+        body : JSON.stringify(event)
+    };
+    return res;
+}
