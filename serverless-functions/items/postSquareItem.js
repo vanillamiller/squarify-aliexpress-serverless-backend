@@ -31,6 +31,11 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
     } catch(e){
       resolve({
         statusCode : 500,
+        headers : {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Credentials': true,
+          'Content-type' : 'application/json'
+        },
         body : JSON.stringify({message : 'something went wrong with your authorization token!'})
       })
     }
@@ -48,7 +53,7 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
       resolve({statusCode : res.statusCode,
               headers : {
                 'Access-Control-Allow-Origin': '*',
-                // 'Access-Control-Allow-Credentials': true,
+                'Access-Control-Allow-Credentials': true,
                 'Content-type' : 'application/json'
               },
               body : resbody
@@ -58,6 +63,8 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
       resolve({
         statusCode : req.statusCode,
         headers : {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Credentials': true,
           'Content-type' : 'application/json'
         },
         body : ''
