@@ -3,7 +3,7 @@ const jwt = require('./jwtModule.js');
 
 exports.authorizer = async function (event) {
    const token = event.authorizationToken;
-   const methodArn = event.methodArn;
+   const methodArn = 'arn:aws:execute-api:ap-southeast-2:322782523902:7ec8t75vad/*/*/items';
      if(token!==undefined){
         try{
             const decoded = jwt.verify(token);

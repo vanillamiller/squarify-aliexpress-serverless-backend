@@ -46,8 +46,7 @@ class Item {
             this.options = jsonData.options
             this.image = jsonData.image;
         } else {
-
-
+            throw Error('improper item request');
         }
     }
     // converts the loaded aliItem into a batch upsert body 
@@ -148,16 +147,29 @@ exports.get = async (event, context, callback) => await new Promise((resolve, re
             data += chunk;
         });
         res.on('end', function () {
-            let ali = new Item(scrape(data.toString()));
-            resolve({
-                statusCode: 200,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Credentials': true,
-                    'Content-type' : 'application/json'
-                },
-                body: JSON.stringify(ali)
-            });
+            try {
+                let ali = new Item(scrape(data.toString()));
+                resolve({
+                    statusCode: 200,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Credentials': true,
+                        'Content-type': 'application/json'
+                    },
+                    body: JSON.stringify(ali)
+                });
+            } catch (e) {
+                resolve({
+                    statusCode: 500,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Credentials': true,
+                        'Content-type': 'application/json'
+                    },
+                    body: JSON.stringify({message : e.message})
+                });
+            }
+
         });
     }).on('error', (e) => resolve({
         statusCode: 501,
