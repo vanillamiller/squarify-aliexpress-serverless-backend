@@ -49,6 +49,7 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
       resolve({statusCode : res.statusCode,
               headers : {
                 'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': true,
                 'Content-type' : 'application/json'
               },
               body : resbody
