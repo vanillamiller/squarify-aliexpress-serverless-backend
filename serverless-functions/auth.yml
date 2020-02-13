@@ -4,3 +4,12 @@
       - http:
           method: get
           path: authorization
+
+ test:
+    handler: ./serverless-functions/auth/lambdaJwtAuthorization.test
+    events:
+      - http:
+          method: post
+          path: test
+          authorizer: lambdaAuthorizerItemsReadItemsWrite
+          cors: true

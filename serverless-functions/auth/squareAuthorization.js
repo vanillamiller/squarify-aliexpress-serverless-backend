@@ -38,8 +38,8 @@ exports.authorizer = async (event, context) => await new Promise((resolve, rejec
       let responseFromSquare = JSON.parse(body);
 
       // encrypt Oaut2 keys before sending to client
-      responseFromSquare.access_token = encrypt(responseFromSquare.access_token, encryptionKey);
-      responseFromSquare.refresh_token = encrypt(responseFromSquare.refresh_token, encryptionKey);
+      responseFromSquare.access_token = encrypt(responseFromSquare.access_token);
+      responseFromSquare.refresh_token = encrypt(responseFromSquare.refresh_token);
 
       // package as jwt payload and sign
       let user = { squareInfo: responseFromSquare, scopes: scopes };

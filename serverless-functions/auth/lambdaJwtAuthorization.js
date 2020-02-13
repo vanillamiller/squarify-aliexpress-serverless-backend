@@ -3,7 +3,7 @@ const jwt = require('./jwtModule.js');
 
 exports.authorizer = async function (event) {
    const token = event.authorizationToken;
-   const methodArn = event.methodArn;
+   const methodArn = 'arn:aws:execute-api:<Region id>:<Account id>:<API id>/<Stage>/<Method>/<Resource path>';
      if(token!==undefined){
         try{
             const decoded = jwt.verify(token);
@@ -39,4 +39,16 @@ function generatePolicyDocument(effect, methodArn) {
    };
 
    return policyDocument;
+}
+
+exports.test = async function(event) {
+    // const foo = event['headers']['Authorization'];
+    const res = {
+        statusCode : 200,
+        headers : {"Content-type" : "application/json",
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,},
+        body : JSON.stringify(event)
+    };
+    return res;
 }

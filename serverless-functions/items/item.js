@@ -4,26 +4,24 @@ const https = require('https');
 const uuid = require('uuid');
 class Item {
 
-    constructor(aliData) {
+    constructor(jsonData) {
 
         let fromAliExpress, fromClient;
 
-        if (typeof aliData !== "undefined") {
-            fromAliExpress = typeof aliData.actionModule !== "undefined";
-            fromClient = typeof aliData.id !== "undefined";
+        if (typeof jsonData !== "undefined") {
+            fromAliExpress = typeof jsonData.actionModule !== "undefined";
+            fromClient = typeof jsonData.id !== "undefined";
         } else {
             fromAliExpress = false;
             fromClient = false;
         }
 
-
-
         if (fromAliExpress) {
-            this.id = aliData.actionModule.productId;
-            this.name = aliData.titleModule.subject;
-            this.price = aliData.priceModule.formatedActivityPrice;
-            this.description = aliData.pageModule.description;
-            let optionsFromNetwork = aliData.skuModule.productSKUPropertyList;
+            this.id = jsonData.actionModule.productId;
+            this.name = jsonData.titleModule.subject;
+            this.price = jsonData.priceModule.formatedActivityPrice;
+            this.description = jsonData.pageModule.description;
+            let optionsFromNetwork = jsonData.skuModule.productSKUPropertyList;
             this.options = optionsFromNetwork.map((p) => {
 
                 let option = {};
@@ -38,18 +36,17 @@ class Item {
                 })
                 return option;
             }),
-                this.images = aliData.imageModule.imagePathList
+                this.images = jsonData.imageModule.imagePathList
 
         } else if (fromClient) {
-            this.id = aliData.id;
-            this.name = aliData.name;
-            this.price = aliData.price;
-            this.description = aliData.description;
-            this.options = aliData.options
-            this.image = aliData.image;
+            this.id = jsonData.id;
+            this.name = jsonData.name;
+            this.price = jsonData.price;
+            this.description = jsonData.description;
+            this.options = jsonData.options
+            this.image = jsonData.image;
         } else {
-
-
+            throw Error('improper item request');
         }
     }
     // converts the loaded aliItem into a batch upsert body 
@@ -125,7 +122,7 @@ const scrape = (data) => {
     }
 }
 
-exports.get = async (event, context, callback) => new Promise((resolve, reject) => {
+exports.get = async (event, context, callback) => await new Promise((resolve, reject) => {
 
     if (event.queryStringParameters == null) {
         resolve(badPathResponse);
@@ -145,28 +142,34 @@ exports.get = async (event, context, callback) => new Promise((resolve, reject) 
 
     const req = https.request(params, function (res) {
         let data = '';
-        console.log('STATUS: ' + res.statusCode);
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
             data += chunk;
         });
         res.on('end', function () {
-            // console.log(scrape(data.toString()));
-            let ali = new Item(scrape(data.toString()));
-            if (ali == {}) {
+            try {
+                let ali = new Item(scrape(data.toString()));
                 resolve({
-                    
+                    statusCode: 200,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Credentials': true,
+                        'Content-type': 'application/json'
+                    },
+                    body: JSON.stringify(ali)
+                });
+            } catch (e) {
+                resolve({
+                    statusCode: 500,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Credentials': true,
+                        'Content-type': 'application/json'
+                    },
+                    body: JSON.stringify({message : e.message})
                 });
             }
-            // console.log(ali.toSquareItem());
-            resolve({
-                statusCode: 200,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Credentials': true,
-                },
-                body: JSON.stringify(ali)
-            });
+
         });
     }).on('error', (e) => resolve({
         statusCode: 501,
@@ -179,4 +182,5 @@ exports.get = async (event, context, callback) => new Promise((resolve, reject) 
     req.end();
 
 }).then((res) => callback(null, res));
+
 module.exports.Item = Item;
