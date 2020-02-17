@@ -6,6 +6,7 @@ getAliItem:
           path: items
           cors: true
           authorizer: lambdaAuthorizerItemsReadItemsWrite
+      - cloudWatchLog: '/aws/lambda/getItem'
 postSquareItem:
     handler: ./serverless-functions/items/postSquareItem.post
     events:
@@ -14,6 +15,7 @@ postSquareItem:
           path: items
           cors: true
           authorizer: lambdaAuthorizerItemsReadItemsWrite
+      - cloudWatchLog: '/aws/lambda/postItem'
 
 lambdaAuthorizerItemsReadItemsWrite:
   handler: ./serverless-functions/auth/lambdaJwtAuthorization.authorizer

@@ -102,6 +102,14 @@ class Item {
     }
 }
 
+const badPathResponse = {
+    statusCode: 502,
+    headers: {
+        "Content-type": "application/json"
+    },
+    body: JSON.stringify({ message: "no item requested" })
+}
+
 const scrape = (data) => {
     try {
         // remove the dangling comma and all redundant stuff after and return
@@ -129,9 +137,7 @@ const generateSuccessResponse = (successfulItem) => ({
         'Access-Control-Allow-Credentials': true,
         'Content-type': 'application/json'
     },
-    body: JSON.stringify(successfulItem),
-    isBase64Encoded : false
-    
+    body: JSON.stringify(successfulItem)
 })
 
 const generateErrorResponse = (e) => ({
@@ -141,16 +147,15 @@ const generateErrorResponse = (e) => ({
         'Access-Control-Allow-Credentials': true,
         'Content-type': 'application/json'
     },
-    body: JSON.stringify({message : e.message}),
-    isBase64Encoded : false
+    body: JSON.stringify({message : e.message})
 })
 
-exports.get = async (event, context, callback) => 
-    fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
-    .then(
-        res => res.text()
-    .then(
-        body => callback(null, generateSuccessResponse(parseAliData(body)))
-    .catch(err =>  callback(null, generateErrorResponse(err)))));
+get = async (event, context, callback) => {
+    const itemId = 32970122508;
+    fetch(`https://www.aliexpress.com/item/${itemId}.html`)
+    .then(res => res.text(), err => console.log(generateErrorResponse(err)))
+    .then(body => console.log(generateSuccessResponse(parseAliData(body))), 
+        err => console.log(generateErrorResponse(err)));
+}
 
-module.exports.Item = Item;
+get()
