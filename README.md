@@ -19,7 +19,7 @@ To use this package you must be a Square developer with a published app, as you 
 - [ ] You will need to configure the environment variables found in serverless.yml with the following values:
     - [ ] CLIENT_ID = your application id from the Square Developer dashboard.
     - [ ] CLIENT_SECRET = your client secret from the application dashboard
-    - [ ] MASTER_KEY = should be a 256 bit string that would constitute a cryptographically strong password. This will be converted into a cryptographic buffer which is much stronger than using the standard string as the key in the encryption.js module with AES-256-gcm.
+    - [ ] MASTER_KEY = should be a string that would constitute a cryptographically strong password. This will be converted into a cryptographic buffer which is much stronger than using the standard string as the key in the encryption.js module with AES-256-gcm.
 
 - [ ] You will need to fill the public.key and private.key with a cryptographically valid private/public RSA256 key pair. These are used to sign and verify the jwt and can be easily generated here https://travistidwell.com/jsencrypt/demo/ or through OpenSSL command line https://rietta.com/blog/openssl-generating-rsa-key-from-command/
 
