@@ -9,6 +9,7 @@
   "author": "Anthony Miller",
   "license": "ISC",
   "dependencies": {
+    "form-data": "^3.0.0",
     "jsonwebtoken": "^8.5.1",
     "node-fetch": "^2.6.0",
     "uuid": "^3.4.0"

@@ -1,161 +1,166 @@
-const fetch = require('node-fetch');
-const uuid = require('uuid');
 
-class Item {
-    constructor(jsonData) {
+'use strict';
+const fetch = require('node-fetch')
+let Item = require('./serverless-functions/items/item').Item;
+const jwt = require('./serverless-functions/auth/jwtModule');
+const decrypt = require('./serverless-functions/auth/encryption').decrypt;
+const FormData = require('form-data');
+const real = "squareup";
+const sandbox = "squareupsandbox";
 
-        let fromAliExpress, fromClient;
-
-        if (typeof jsonData !== "undefined") {
-            fromAliExpress = typeof jsonData.actionModule !== "undefined";
-            fromClient = typeof jsonData.id !== "undefined";
-        } else {
-            fromAliExpress = false;
-            fromClient = false;
-        }
-
-        if (fromAliExpress) {
-            this.id = jsonData.actionModule.productId;
-            this.name = jsonData.titleModule.subject;
-            this.price = jsonData.priceModule.formatedActivityPrice;
-            this.description = jsonData.pageModule.description;
-            let optionsFromNetwork = jsonData.skuModule.productSKUPropertyList;
-            this.options = optionsFromNetwork.map((p) => {
-
-                let option = {};
-                option.name = p.skuPropertyName;
-                option.values = p.skuPropertyValues.map((v) => {
-
-                    let value = {};
-                    value.name = v.propertyValueDisplayName;
-                    value.image = v.skuPropertyImagePath;
-                    return value;
-
-                })
-                return option;
-            }),
-                this.images = jsonData.imageModule.imagePathList
-
-        } else if (fromClient) {
-            this.id = jsonData.id;
-            this.name = jsonData.name;
-            this.price = jsonData.price;
-            this.description = jsonData.description;
-            this.options = jsonData.options
-            this.image = jsonData.image;
-        } else {
-            console.log(`passed in is: ${jsonData}`);
-            throw Error('improper item request');
-        }
-    }
-    // converts the loaded aliItem into a batch upsert body 
-    toSquareItem() {
-
-        let req = { "idempotency_key": uuid() };
-        let objects = [];
-        let object = {
-            "type": "ITEM",
-            "id": `#${this.name.replace(/\s/g, '-')}`,
-        };
-        let itemData = {
-            "name": this.name,
-            "description": this.description,
-            "image": this.image,
-        };
-        if (this.options.length > 0) {
-            let addOptions = this.options.map(v => {
-                // uuid's are used because square options are universal in the backend
-                // where in this case they need to be directly associated with the product 
-                // for demonstration purposes. The standard #name resulted in many clashes.
-                // Many of the tests were done on clothing which have same name SIZE but 
-                // varied in range of sizes.
-                let option = { id: `#${uuid()}`, type: "ITEM_OPTION" }
-                // console.log("here is what it thinks values is: " +JSON.stringify(v.values));
-                // create list of values that the option holds eg SIZE (ITEM_OPTION) holds S,M,L,XL (ITEM_OPTION_VAL)
-                let values = v.values.map(w => {
-                    // create the item option value to be added to values array within the options.
-                    // console.log("here is what it thinks value is: " + JSON.stringify(w));
-                    let info = {
-                        id: `#${uuid()}`,
-                        type: "ITEM_OPTION_VAL",
-                        item_option_value_data: {
-                            name: w.name
-                        }
-                    }
-                    return info;
-                });
-                // insert name and option values into item_options_data
-                option.item_option_data = { name: `${v.name} FOR: ${this.name}`, values: values, display_name: v.name };
-                return option;
-            })
-            // spread the different options into batch upsert objects
-            objects = [...addOptions];
-            // append the options id to the actual item
-            itemData.item_options = addOptions.map(opt => { return { "item_option_id": opt.id } });
-        }
-        // insert the item into the batch objects with the accompanying options and return 
-        // the appropriate request body
-        object.item_data = itemData;
-        objects.push(object);
-        req.batches = [{ objects: objects }];
-        return req;
-    }
-}
-
-const badPathResponse = {
-    statusCode: 502,
-    headers: {
-        "Content-type": "application/json"
-    },
-    body: JSON.stringify({ message: "no item requested" })
-}
-
-const scrape = (data) => {
-    try {
-        // remove the dangling comma and all redundant stuff after and return
-        let cleaned = data.match(/data: \{.*/g)[0].replace(/[\n\r]/g, '');
-        return JSON.parse(cleaned.slice(6, cleaned.lastIndexOf('},') + 1));
-    } catch (e) {
-        // if Aliexpress schema changes will not crash but return JSON parsing error
-        throw Error('problem with the schema aliExpress returned');
-    }
-}
-
-const parseAliData = (data) => {
-    try {
-        let scrapedAliData = scrape(data.toString())
-        return new Item(scrapedAliData);
-    } catch (e) {
-        throw e;
-    }
-}
+let params = {
+  host: `connect.${real}.com`,
+  path: "/v2/catalog/batch-upsert",
+  port: 443,
+  method: "POST",
+  headers: {
+    "Square-Version": "2020-01-22",
+    "Content-type": "application/json",
+  }
+};
 
 const generateSuccessResponse = (successfulItem) => ({
-    statusCode: 200,
-    headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true,
-        'Content-type': 'application/json'
-    },
-    body: JSON.stringify(successfulItem)
+  statusCode: 200,
+  headers: {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Credentials': true,
+    'Content-type': 'application/json'
+  },
+  body: JSON.stringify(successfulItem),
 })
 
-const generateErrorResponse = (e) => ({
-    statusCode: 500,
-    headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true,
-        'Content-type': 'application/json'
-    },
-    body: JSON.stringify({message : e.message})
-})
+const errorResponse = {
+  statusCode: 500,
+  headers: {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Credentials': true,
+    'Content-type': 'application/json'
+  },
+  body: JSON.stringify({ message: 'something went wrong with your authorization token!' })
+};
 
-get = async (event, context, callback) => {
-    const itemId = 32970122508;
-    fetch(`https://www.aliexpress.com/item/${itemId}.html`)
-    .then(res => res.text(), err => console.log(generateErrorResponse(err)))
-    .then(body => console.log(generateSuccessResponse(parseAliData(body))), 
-        err => console.log(generateErrorResponse(err)));
-}
+const getImageType = (imageUrl) => imageUrl.split('.').pop();
 
-get()
+const generateContentTypeHeader = (imageType) => {
+  switch (imageType) {
+    case 'jpg' || 'jpeg' || 'JPEG':
+      return 'image/JPEG';
+    case 'png' || 'PNG':
+      return 'image/PNG';
+    case 'gif' || 'GIF':
+      return 'image/GIF';
+    case 'pjpeg' || 'PJPEG':
+      return 'image/PJPEG'
+    default:
+      throw Error('unknown image extension');
+  }
+};
+
+const post = async (event) => {
+
+  const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
+  const itemObject = new Item(itemFromEventJson);
+  const body = JSON.stringify(itemObject.toSquareItem());
+  const encodedjwt = event['headers']['Authorization'];
+  let decodedjwt;
+
+  try {
+    decodedjwt = jwt.verify(encodedjwt)
+  } catch (e) {
+    console.log(e)
+  }
+
+  const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
+  params.headers.Authorization = `Bearer ${decryptedSquareOauth2Token}`;
+
+  const postItemToSquare = async () => fetch(`https://connect.${real}.com/v2/catalog/batch-upsert`,
+    {
+      method: 'post',
+      body: body,
+      headers: params.headers
+    })
+    .then(res => res.json())
+    .then(json => console.log('here in res' + JSON.stringify(json)))
+    .catch(err => console.log(err));
+  
+  const getAliImage = fetch(itemObject.image).then(res => res.buffer()).catch(err => console.log(err));
+
+  postItemToSquare();
+  // Promise.all([postItemToSquare, getAliImage])
+  //   .then(
+  //     ([postItemToSquare, getAliImage]) => {
+  //       const itemIdMap = postItemToSquare.id_mappings.filter(obj => obj.client_object_id === `#${itemObject.name}`)[0];
+  //       const imageFormJson = {
+  //         "idempotency_key": uuid(),
+  //         "object_id": itemIdMap,
+  //         "image": {
+  //           "id": "#TEMP_ID",
+  //           "type": "IMAGE",
+  //           "image_data": {
+  //             "caption": itemObject.name
+  //           }
+  //         }
+  //       };
+  //       const formData = new FormData();
+  //       formData.append('request', imageFormJson);
+  //       formData.append('file', aliImage);
+
+  //       const headers = {
+  //         "Content-type": generateContentTypeHeader(getImageType(itemObject.image)),
+  //         "Content-Disposition": `form-data; name="${itemObject.name}"; filename="${itemObject.name.strip(' ')}.${getImageType(itemObject.image).toLowerCase()}"`
+  //       }
+
+  //       fetch('https://connect.squareupsandbox.com/v2/catalog/images',
+  //         {
+  //           method: 'post',
+  //           body: formData,
+  //           headers: headers
+  //         })
+  //         .then(
+  //           res => res.json()
+  //         )
+  //         .then(json => console.log(json))
+  //         .catch(
+  //           err => console.log(err)
+  //         )
+  //     }
+  //   ).catch(err => console.log(err));
+};
+
+const mockEvent = {
+  headers: {
+    Authorization: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcXVhcmVJbmZvIjp7ImFjY2Vzc190b2tlbiI6IlBGQXdJNVdFWDlaZStLNlNrMWd1eC9YeEVuUytVOGlFWGpIZkN5YzNCbFJ2UkIzL1k3b3krVktqK09vQVY2TnorbytnR0krZG1RTFVpelo1Qk9BcnFHVUg2K1NPdHJMUXF5NVJiMW1ZbGlrK1lGRTNoSnYwckJtV2diTGtWa2JuYzR6NTgzaXdzblRGczRCbW1XLy9KUGt4eEZZbVA5SkRnZUJtQXJtd3VGMnBCekFhRXdGYzFuVE81a1I4STRkbzRIY0s4NVJHQmFQcUhTcDVHRG5hOVE9PSIsInRva2VuX3R5cGUiOiJiZWFyZXIiLCJleHBpcmVzX2F0IjoiMjAyMC0wMy0xOVQxMTozNjoxNloiLCJtZXJjaGFudF9pZCI6IjhGMzQ5QkZCSjVGVzEiLCJyZWZyZXNoX3Rva2VuIjoibmJETGpraUxYM1JieVl5OHBLTERYS2s2QjFnbmdCWE9Ib1hodStTa2pQajhiNHU2NnFBUktucXRJUDhtZzBEODlYNmt6S3B1Z1dJMldYNlY0UUp0K0Mvb0Q5Z1ltZWFRWGR5MTRJRVJTRkZkM3NoeDk4UENxdTBCRnVvQTN5dmZoTml0MDIrVTNaU2Evb0dhanh4VXgya2RLdys5UGpUS1huYnljNnFZTVp2TGNYaWc1NEVnZStRZ2dUMmlOeGVoZjYwZkVDb0t6bStkYldNL3oyd3dXdz09In0sInNjb3BlcyI6WyJpdGVtcyJdLCJpYXQiOjE1ODIwMjU3NzZ9.hQh_NMb7lxQT3avnmGquycGUlVqdl-pzgxuuracRv50exgbrwMQhSXJe8n8lrI7QPPMUtX3kOKj4BIVCzMYu7Wp5QZa3Q4wz8x6FXXxHviP_b7CRtZ7HTXloKhrjZesq38lMKQGvnOZnZ6q9uwnhQ_9gSD5Thf4gIhfeAHC_SaQ"
+  },
+  body: JSON.stringify({
+    itemFromClient: {
+      "id": 4000050168302,
+      "name": "New NAVIFORCE Top Luxury Brand Men Watch Quartz Male Clock Design Sport Watch Waterproof Stainless Steel Wristwatch Reloj Hombre",
+      "desc": "Cheap Quartz Watches, Buy Directly from China Suppliers:New NAVIFORCE Top Luxury Brand Men Watch Quartz Male Clock Design Sport Watch Waterproof Stainless Steel Wristwatch Reloj Hombre Enjoy âFree Shipping Worldwide! âLimited Time SaleÂ âEasy Return.",
+      "image": "https://ae01.alicdn.com/kf/H57e996575d70408baf051fcaeda766e0l/2019-Elastic-Mens-T-Shirt-V-Neck-Long-Sleeve-Men-T-Shirt-For-Male-Lycra-And.jpg_640x640.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "values": [
+            {
+              "name": "BB"
+            },
+            {
+              "name": "SB"
+            },
+            {
+              "name": "BEBE"
+            },
+            {
+              "name": "GG"
+            },
+            {
+              "name": "RGCE"
+            }
+          ]
+        }
+      ]
+    }
+  })
+};
+
+post(mockEvent);

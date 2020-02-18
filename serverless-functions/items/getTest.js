@@ -112,6 +112,7 @@ const scrape = (data) => {
         // remove the dangling comma and all redundant stuff after and return
         let cleaned = data.match(/data: \{.*\}/g)[0].replace(/[\n\r]/g, '');
         cleaned = cleaned.substring(6);
+        console.log(cleaned)
         return JSON.parse(cleaned);
     } catch (e) {
         // if Aliexpress schema changes will not crash but return JSON parsing error
@@ -151,12 +152,13 @@ const generateErrorResponse = (e) => ({
     isBase64Encoded : false
 })
 
-exports.get = async (event, context, callback) => 
-    fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
+get = async (event) => 
+    fetch(`https://www.aliexpress.com/item/32352587509.html`)
     .then(
         res => res.text()
     .then(
-        body => callback(null, generateSuccessResponse(parseAliData(body)))
-    .catch(err =>  callback(null, generateErrorResponse(Error('could not get item from aliExpress'))))));
+        body => console.log(parseAliData(body)))
+    .catch(err =>  console.log(err)));
 
+get();
 module.exports.Item = Item;
