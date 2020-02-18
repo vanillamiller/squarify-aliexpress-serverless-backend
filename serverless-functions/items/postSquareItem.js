@@ -22,7 +22,8 @@ let params = {
 exports.post = async (event, context, callback) => new Promise((resolve, reject) => {
 
     const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
-    const body = JSON.stringify(new Item(itemFromEventJson).toSquareItem());
+    const itemObject = new Item(itemFromEventJson);
+    const body = JSON.stringify(itemObject.toSquareItem());
     const encodedjwt = event['headers']['Authorization'];
     let decodedjwt;
 
@@ -43,33 +44,33 @@ exports.post = async (event, context, callback) => new Promise((resolve, reject)
     const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
     params.headers.Authorization = `Bearer ${decryptedSquareOauth2Token}`;
     
-    const req = https.request(params, (res) => {
-      let resbody = '';
-      res.on('data', function (chunk) {
-              resbody += chunk;
-            });
+    // const req = https.request(params, (res) => {
+    //   let resbody = '';
+    //   res.on('data', function (chunk) {
+    //           resbody += chunk;
+    //         });
              
-      res.on('end', (chunk) => 
-      resolve({statusCode : res.statusCode,
-              headers : {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Credentials': true,
-                'Content-type' : 'application/json'
-              },
-              body : resbody
-          }));
+    //   res.on('end', (chunk) => 
+    //   resolve({statusCode : res.statusCode,
+    //           headers : {
+    //             'Access-Control-Allow-Origin': '*',
+    //             'Access-Control-Allow-Credentials': true,
+    //             'Content-type' : 'application/json'
+    //           },
+    //           body : resbody
+    //       }));
             
-    }).on('error', (e) => {
-      resolve({
-        statusCode : req.statusCode,
-        headers : {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Credentials': true,
-          'Content-type' : 'application/json'
-        },
-        body : ''
-      });
-    });
+    // }).on('error', (e) => {
+    //   resolve({
+    //     statusCode : req.statusCode,
+    //     headers : {
+    //       'Access-Control-Allow-Origin': '*',
+    //       'Access-Control-Allow-Credentials': true,
+    //       'Content-type' : 'application/json'
+    //     },
+    //     body : ''
+    //   });
+    // });
         
     // send the request
     req.write(body);
