@@ -40,11 +40,10 @@ class Item {
             this.id = jsonData.id;
             this.name = jsonData.name;
             this.price = jsonData.price;
-            this.description = jsonData.description;
+            this.description = jsonData.desc;
             this.options = jsonData.options
             this.image = jsonData.image;
         } else {
-            console.log(`passed in is: ${jsonData}`);
             throw Error('improper item request');
         }
     }
@@ -52,6 +51,7 @@ class Item {
     toSquareItem() {
 
         let req = { "idempotency_key": uuid() };
+        
         let objects = [];
         let object = {
             "type": "ITEM",
@@ -91,8 +91,13 @@ class Item {
             // spread the different options into batch upsert objects
             objects = [...addOptions];
             // append the options id to the actual item
-            itemData.item_options = addOptions.map(opt => { return { "item_option_id": opt.id } });
+            itemData.item_options = addOptions.map(opt => ({ "item_option_id": opt.id }));
         }
+
+        let image_data = {
+            "url" : this.image,
+            "name" : `${this.name} image`,
+        };
         // insert the item into the batch objects with the accompanying options and return 
         // the appropriate request body
         object.item_data = itemData;
@@ -151,6 +156,6 @@ exports.get = async (event, context, callback) =>
         res => res.text()
     .then(
         body => callback(null, generateSuccessResponse(parseAliData(body)))
-    .catch(err =>  callback(null, generateErrorResponse(err)))));
+    .catch(err =>  callback(null, generateErrorResponse(Error('could not get item from aliExpress'))))));
 
 module.exports.Item = Item;
