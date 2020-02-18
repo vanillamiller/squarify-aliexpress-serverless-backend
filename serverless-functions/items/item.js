@@ -110,8 +110,9 @@ class Item {
 const scrape = (data) => {
     try {
         // remove the dangling comma and all redundant stuff after and return
-        let cleaned = data.match(/data: \{.*/g)[0].replace(/[\n\r]/g, '');
-        return JSON.parse(cleaned.slice(6, cleaned.lastIndexOf('},') + 1));
+        let cleaned = data.match(/data: \{.*\}/g)[0].replace(/[\n\r]/g, '');
+        cleaned = cleaned.substring(6);
+        return JSON.parse(cleaned);
     } catch (e) {
         // if Aliexpress schema changes will not crash but return JSON parsing error
         throw Error('problem with the schema aliExpress returned');
