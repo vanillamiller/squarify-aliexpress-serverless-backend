@@ -4,7 +4,7 @@ const fetch = require('node-fetch')
 let Item = require('./serverless-functions/items/item').Item;
 const jwt = require('./serverless-functions/auth/jwtModule');
 const decrypt = require('./serverless-functions/auth/encryption').decrypt;
-const uuid =  require('uuid');
+const uuid = require('uuid');
 const { Readable } = require('stream');
 const FormData = require('form-data');
 const real = "squareup";
@@ -83,15 +83,20 @@ const post = async (event) => {
       headers: params.headers
     })
     .then(res => res.json())
-  
+
   const getAliImage = fetch(itemObject.image).then(res => res.buffer());
-  
+
   Promise.all([postItemToSquare, getAliImage])
     .then(
       ([squareResponse, aliImage]) => {
         console.log('++++++++++++++++ Square Json +++++++++++++++++++++');
+        console.log(`the name is ${itemObject.name}`)
         console.log(squareResponse);
-        const itemId = squareResponse.id_mappings.filter(obj => obj.client_object_id === `#${itemObject.name}`)[0];
+        const itemId = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].id;
+        // const itemId = squareResponse.id_mappings.filter(obj => obj.client_object_id === `#${itemObject.name}`)[0];
+
+        console.log('++++++++++++++++ ItemId +++++++++++++++++++++');
+        console.log(itemId);
         const imageFormJson = {
           "idempotency_key": uuid(),
           "object_id": itemId,
@@ -103,20 +108,30 @@ const post = async (event) => {
             }
           }
         };
-        const formData = new FormData();
-        formData.append('request', imageFormJson);
-        formData.append('file', aliImage);
 
-        const headers = {
-          "Content-type": generateContentTypeHeader(getImageType(itemObject.image)),
-          "Content-Disposition": `form-data; name="${itemObject.name}"; filename="${itemObject.name.strip(' ')}.${getImageType(itemObject.image).toLowerCase()}"`
-        }
+        let form = new FormData();
 
-        fetch('https://connect.squareupsandbox.com/v2/catalog/images',
+        form.append('request', JSON.stringify(imageFormJson),
+          {
+            contentType: 'application/json'
+          });
+
+        form.append('image', aliImage,
+          {
+            contentType: 'image/jpeg',
+            filename: 'test.jpg'
+          });
+
+        fetch('https://connect.squareup.com/v2/catalog/images',
           {
             method: 'post',
-            body: formData,
-            headers: headers
+            body: form,
+            headers: {
+              "Content-type": `multipart/form-data;boundary="${form.getBoundary()}"`,
+              "Accept": "application/json",
+              "Authorization": `Bearer ${decryptedSquareOauth2Token}`,
+              "Square-Version": "2020-01-22",
+            }
           })
           .then(
             res => res.json()
@@ -135,28 +150,50 @@ const mockEvent = {
   },
   body: JSON.stringify({
     itemFromClient: {
-      "id": 33059532270,
-      "name": "Original Razer DeathAdder Essential Wired Gaming Mouse Mice 6400DPI Optical Sensor 5 Independently Buttons For Laptop PC    Gamer",
-      "desc": "Cheap Mice, Buy Directly from China Suppliers:Original Razer DeathAdder Essential Wired Gaming Mouse Mice 6400DPI Optical Sensor 5          Independently Buttons For Laptop PC Gamer    Enjoy âFree Shipping Worldwide! âLimited Time SaleÂ âEasy Return.",
-      "image": "https://ae01.alicdn.com/kf/HTB1Ko3lX.z1gK0jSZLeq6z9kVXaa/Original-Razer-DeathAdder-Essential-Wired-Gaming-Mouse-Mice-6400DPI-Optical-Sensor-5-Independently-Buttons-For-Laptop.jpg",
+      "id": 4000386069867,
+      "name": "1111g",
+      "desc": "Online Shopping at a cheapest price for Automotive, Phones & Accessories, Computers & Electronics, Fashion, Beauty & Health, Home &          Garden, Toys & Sports, Weddings & Events and more; just about anything else    Enjoy âFree Shipping Worldwide! âLimited Time SaleÂ âEasy Return.",
+      "image": "https://ae01.alicdn.com/kf/U3accc565725946589bf671efa40218c4U/AUN-LED-HD-Projector-D60-1280x720P-Resolution-Support-3D-video-Beamer-Home-Cinema-Optional-Android-WIFI.jpg",
       "options": [
+          {
+              "name": "Ships From",
+              "values": [
+                  {
+                      "name": "China"
+                  },
+                  {
+                      "name": "United States"
+                  },
+                  {
+                      "name": "Spain"
+                  },
+                  {
+                      "name": "Australia"
+                  },
+                  {
+                      "name": "Russian Federation"
+                  },
+                  {
+                      "name": "France"
+                  },
+                  {
+                      "name": "Italy"
+                  }
+              ]
+          },
           {
               "name": "Color",
               "values": [
                   {
-                      "name": "6400DPI With      Box"
+                      "name": "D60"
                   },
                   {
-                      "name": "2000DPI No RetailBox"
-                  },
-                  {
-                      "name": "6400DPI With Box"
+                      "name": "D60S"
                   }
               ]
           }
       ]
-  }
-  })
+  }})
 };
 
 
@@ -189,29 +226,20 @@ const postImg = async () => {
   };
 
   const aliImage = await fetch(imageUrl).then(res => res.buffer())
-  // .then(buffer => new Readable({
-  //   read() {
-  //     this.push(buffer);
-  //     this.push(null);
-  //   }
-  // }));
+
 
   let form = new FormData();
-  // const imageFormBuffer = Buffer.from(JSON.stringify(imageFormJson));
-  form.append('request', JSON.stringify(imageFormJson), 
-  {
-    contentType : 'application/json'
-    // header : '\r\n' + '--' + form.getBoundary() + '\r\n' + 'Content-Disposition: form-data; name="request"' + '\r\n' + 'Content-type : application/json'
-  });
-      
+
+  form.append('request', JSON.stringify(imageFormJson),
+    {
+      contentType: 'application/json'
+    });
+
   form.append('image', aliImage,
-  {
-    // header : '\r\n' + '--' + form.getBoundary() + '\r\n' + 
-    //   `Content-Disposition: form-data; name="image"; filename="${itemName}.jpg"`
-    //   + '\r\n' + `Content-type : ${generateContentTypeHeader(imageUrl)}`,
-    contentType : 'image/jpeg',
-    filename : 'test.jpg'
-  });
+    {
+      contentType: 'image/jpeg',
+      filename: 'test.jpg'
+    });
 
   console.log(form);
 
@@ -221,9 +249,9 @@ const postImg = async () => {
       body: form,
       headers: {
         "Content-type": `multipart/form-data;boundary="${form.getBoundary()}"`,
-        "Accept" : "application/json",
-        "Authorization" : `Bearer ${decryptedSquareOauth2Token}`,
-        "Square-Version":  "2020-01-22",
+        "Accept": "application/json",
+        "Authorization": `Bearer ${decryptedSquareOauth2Token}`,
+        "Square-Version": "2020-01-22",
       }
     })
     .then(
@@ -235,10 +263,10 @@ const postImg = async () => {
     )
 }
 
-postImg();
+post(mockEvent);
 
 
-  
+
 
 // const he = {"Content-Disposition": `form-data; name="${itemName}"; filename="${itemName}.${getImageType(imageUrl).toLowerCase()}"` }
 
