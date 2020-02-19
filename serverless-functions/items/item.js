@@ -152,11 +152,19 @@ const generateErrorResponse = (e) => ({
 })
 
 exports.get = async (event, context, callback) => 
-    fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
+    await fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
     .then(
         res => res.text()
     .then(
-        body => callback(null, generateSuccessResponse(parseAliData(body)))
-    .catch(err =>  callback(null, generateErrorResponse(Error('could not get item from aliExpress'))))));
+        body => {
+            let aliData;
+            try{
+                aliData = parseAliData(body)
+            }catch(e){
+                e => callback(null, generateErrorResponse(e.message))
+            }
+            callback(null, generateSuccessResponse(aliData))
+            })
+    .catch(err =>  callback(null, generateErrorResponse(Error('could not get item from aliExpress')))));
 
 module.exports.Item = Item;
