@@ -65,7 +65,3 @@ exports.authorizer = async (event, context) => await new Promise((resolve, rejec
   req.write(body);
   req.end();
 });
-
-// const createJwt = json => jwt.sign(json, process.env.JWT_KEY, {algorithm : 'RS256'});
-
-// const verifyJwt = token => jwt.verify
