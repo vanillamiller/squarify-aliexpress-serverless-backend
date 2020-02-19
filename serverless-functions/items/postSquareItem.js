@@ -19,15 +19,15 @@ let params = {
   }
 };
 
-const generateSuccessResponse = (successfulItem) => ({
+const successResponse =  {
   statusCode: 200,
   headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Credentials': true,
       'Content-type': 'application/json'
   },
-  body: JSON.stringify(successfulItem),
-})
+  body: JSON.stringify({message : 'Item uploaded successfully'}),
+};
 
 const errorResponse = {
   statusCode : 500,
@@ -59,7 +59,7 @@ const generateContentTypeHeader = (imageType) => {
 
 exports.post = async (event, context, callback) => {
 
-    const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
+  const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
     const itemObject = new Item(itemFromEventJson);
     const body = JSON.stringify(itemObject.toSquareItem());
     const encodedjwt = event['headers']['Authorization'];
@@ -71,57 +71,73 @@ exports.post = async (event, context, callback) => {
       callback(null, errorResponse);
     }
 
-    const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
-    params.headers.Authorization = `Bearer ${decryptedSquareOauth2Token}`;
-    
-    const postItemToSquare = fetch(`https://connect.${real}.com/v2/catalog/batch-upsert`,
-    { method : 'post',
-      body : body,
-      headers : params.headers
+  const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
+  params.headers.Authorization = `Bearer ${decryptedSquareOauth2Token}`;
+
+  const postItemToSquare = fetch(`https://connect.${real}.com/v2/catalog/batch-upsert`,
+    {
+      method: 'post',
+      body: body,
+      headers: params.headers
     })
-    .then(
-      res => res.json()
-    );
+    .then(res => res.json())
 
-    const getAliImage = fetch(itemObject.image).then(res => res.buffer());
-    
+  const getAliImage = fetch(itemObject.image).then(res => res.buffer());
 
-    Promise.all([postItemToSquare, getAliImage])
+  Promise.all([postItemToSquare, getAliImage])
     .then(
-      ([squareRes, aliImage]) => {
-        const itemIdMap = squareRes.filter(obj => obj.client_object_id === `#${itemObject.name}`)[0];
+      ([squareResponse, aliImage]) => {
+        console.log('++++++++++++++++ Square Json +++++++++++++++++++++');
+        console.log(`the name is ${itemObject.name}`)
+        console.log(squareResponse);
+        const itemId = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].id;
+        console.log('++++++++++++++++ ItemId +++++++++++++++++++++');
+        console.log(itemId);
         const imageFormJson = {
           "idempotency_key": uuid(),
-          "object_id": itemIdMap,
-          "image":{
-              "id":"#TEMP_ID",
-              "type":"IMAGE",
-              "image_data":{
-                  "caption": itemObject.name
-              }
+          "object_id": itemId,
+          "image": {
+            "id": "#TEMP_ID",
+            "type": "IMAGE",
+            "image_data": {
+              "caption": itemObject.name
+            }
           }
         };
-        const formData = new FormData();
-        formData.append('request', imageFormJson);
-        formData.append('file', aliImage);
 
-        const headers = {
-          "Content-type" : generateContentTypeHeader(getImageType(itemObject.image)),
-          "Content-Disposition" : `form-data; name="${itemObject.name}"; filename="${itemObject.name.strip(' ')}.${getImageType(itemObject.image).toLowerCase()}"`
-        }
+        let form = new FormData();
 
-        fetch('https://connect.squareupsandbox.com/v2/catalog/images',
-        {
-          method : 'post',
-          body : formData,
-          headers : headers
-        })
-        .then(
-          callback(null, generateSuccessResponse(itemObject))
-        )
-        .catch(
-          callback(null, errorResponse)
-        )
+        form.append('request', JSON.stringify(imageFormJson),
+          {
+            contentType: 'application/json'
+          });
+
+        form.append('image', aliImage,
+          {
+            contentType: 'image/jpeg',
+            filename: 'test.jpg'
+          });
+
+        fetch('https://connect.squareup.com/v2/catalog/images',
+          {
+            method: 'post',
+            body: form,
+            headers: {
+              "Content-type": `multipart/form-data;boundary="${form.getBoundary()}"`,
+              "Accept": "application/json",
+              "Authorization": `Bearer ${decryptedSquareOauth2Token}`,
+              "Square-Version": "2020-01-22",
+            }
+          })
+          .then(
+            res => res.json()
+          )
+          .then( 
+            callback(null, successResponse) 
+          )
+          .catch(
+            callback(null, errorResponse)
+          )
       }
-    );
+    ).catch(callback(null, errorResponse));
 };
