@@ -1,161 +1,288 @@
-const fetch = require('node-fetch');
+
+'use strict';
+const fetch = require('node-fetch')
+let Item = require('./serverless-functions/items/item').Item;
+const jwt = require('./serverless-functions/auth/jwtModule');
+const decrypt = require('./serverless-functions/auth/encryption').decrypt;
 const uuid = require('uuid');
+const FormData = require('form-data');
+const real = "squareup";
+const sandbox = "squareupsandbox";
 
-class Item {
-    constructor(jsonData) {
 
-        let fromAliExpress, fromClient;
-
-        if (typeof jsonData !== "undefined") {
-            fromAliExpress = typeof jsonData.actionModule !== "undefined";
-            fromClient = typeof jsonData.id !== "undefined";
-        } else {
-            fromAliExpress = false;
-            fromClient = false;
-        }
-
-        if (fromAliExpress) {
-            this.id = jsonData.actionModule.productId;
-            this.name = jsonData.titleModule.subject;
-            this.price = jsonData.priceModule.formatedActivityPrice;
-            this.description = jsonData.pageModule.description;
-            let optionsFromNetwork = jsonData.skuModule.productSKUPropertyList;
-            this.options = optionsFromNetwork.map((p) => {
-
-                let option = {};
-                option.name = p.skuPropertyName;
-                option.values = p.skuPropertyValues.map((v) => {
-
-                    let value = {};
-                    value.name = v.propertyValueDisplayName;
-                    value.image = v.skuPropertyImagePath;
-                    return value;
-
-                })
-                return option;
-            }),
-                this.images = jsonData.imageModule.imagePathList
-
-        } else if (fromClient) {
-            this.id = jsonData.id;
-            this.name = jsonData.name;
-            this.price = jsonData.price;
-            this.description = jsonData.description;
-            this.options = jsonData.options
-            this.image = jsonData.image;
-        } else {
-            console.log(`passed in is: ${jsonData}`);
-            throw Error('improper item request');
-        }
-    }
-    // converts the loaded aliItem into a batch upsert body 
-    toSquareItem() {
-
-        let req = { "idempotency_key": uuid() };
-        let objects = [];
-        let object = {
-            "type": "ITEM",
-            "id": `#${this.name.replace(/\s/g, '-')}`,
-        };
-        let itemData = {
-            "name": this.name,
-            "description": this.description,
-            "image": this.image,
-        };
-        if (this.options.length > 0) {
-            let addOptions = this.options.map(v => {
-                // uuid's are used because square options are universal in the backend
-                // where in this case they need to be directly associated with the product 
-                // for demonstration purposes. The standard #name resulted in many clashes.
-                // Many of the tests were done on clothing which have same name SIZE but 
-                // varied in range of sizes.
-                let option = { id: `#${uuid()}`, type: "ITEM_OPTION" }
-                // console.log("here is what it thinks values is: " +JSON.stringify(v.values));
-                // create list of values that the option holds eg SIZE (ITEM_OPTION) holds S,M,L,XL (ITEM_OPTION_VAL)
-                let values = v.values.map(w => {
-                    // create the item option value to be added to values array within the options.
-                    // console.log("here is what it thinks value is: " + JSON.stringify(w));
-                    let info = {
-                        id: `#${uuid()}`,
-                        type: "ITEM_OPTION_VAL",
-                        item_option_value_data: {
-                            name: w.name
-                        }
-                    }
-                    return info;
-                });
-                // insert name and option values into item_options_data
-                option.item_option_data = { name: `${v.name} FOR: ${this.name}`, values: values, display_name: v.name };
-                return option;
-            })
-            // spread the different options into batch upsert objects
-            objects = [...addOptions];
-            // append the options id to the actual item
-            itemData.item_options = addOptions.map(opt => { return { "item_option_id": opt.id } });
-        }
-        // insert the item into the batch objects with the accompanying options and return 
-        // the appropriate request body
-        object.item_data = itemData;
-        objects.push(object);
-        req.batches = [{ objects: objects }];
-        return req;
-    }
-}
-
-const badPathResponse = {
-    statusCode: 502,
-    headers: {
-        "Content-type": "application/json"
-    },
-    body: JSON.stringify({ message: "no item requested" })
-}
-
-const scrape = (data) => {
-    try {
-        // remove the dangling comma and all redundant stuff after and return
-        let cleaned = data.match(/data: \{.*/g)[0].replace(/[\n\r]/g, '');
-        return JSON.parse(cleaned.slice(6, cleaned.lastIndexOf('},') + 1));
-    } catch (e) {
-        // if Aliexpress schema changes will not crash but return JSON parsing error
-        throw Error('problem with the schema aliExpress returned');
-    }
-}
-
-const parseAliData = (data) => {
-    try {
-        let scrapedAliData = scrape(data.toString())
-        return new Item(scrapedAliData);
-    } catch (e) {
-        throw e;
-    }
-}
+let params = {
+  host: `connect.${real}.com`,
+  path: "/v2/catalog/batch-upsert",
+  port: 443,
+  method: "POST",
+  headers: {
+    "Square-Version": "2020-01-22",
+    "Content-type": "application/json",
+  }
+};
 
 const generateSuccessResponse = (successfulItem) => ({
-    statusCode: 200,
-    headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true,
-        'Content-type': 'application/json'
-    },
-    body: JSON.stringify(successfulItem)
+  statusCode: 200,
+  headers: {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Credentials': true,
+    'Content-type': 'application/json'
+  },
+  body: JSON.stringify(successfulItem),
 })
 
-const generateErrorResponse = (e) => ({
-    statusCode: 500,
-    headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true,
-        'Content-type': 'application/json'
-    },
-    body: JSON.stringify({message : e.message})
-})
+const errorResponse = {
+  statusCode: 500,
+  headers: {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Credentials': true,
+    'Content-type': 'application/json'
+  },
+  body: JSON.stringify({ message: 'something went wrong with your authorization token!' })
+};
 
-get = async (event, context, callback) => {
-    const itemId = 32970122508;
-    fetch(`https://www.aliexpress.com/item/${itemId}.html`)
-    .then(res => res.text(), err => console.log(generateErrorResponse(err)))
-    .then(body => console.log(generateSuccessResponse(parseAliData(body))), 
-        err => console.log(generateErrorResponse(err)));
+const getImageType = (imageUrl) => imageUrl.split('.').pop();
+
+const generateContentTypeHeader = (url) => {
+  switch (getImageType(url)) {
+    case 'jpg' || 'jpeg' || 'JPEG':
+      return 'image/JPEG';
+    case 'png' || 'PNG':
+      return 'image/PNG';
+    case 'gif' || 'GIF':
+      return 'image/GIF';
+    case 'pjpeg' || 'PJPEG':
+      return 'image/PJPEG'
+    default:
+      throw Error('unknown image extension');
+  }
+};
+
+const post = async (event) => {
+
+  const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
+  const itemObject = new Item(itemFromEventJson);
+  const body = JSON.stringify(itemObject.toSquareItem());
+  const encodedjwt = event['headers']['Authorization'];
+  let decodedjwt;
+
+  try {
+    decodedjwt = jwt.verify(encodedjwt)
+  } catch (e) {
+    console.log(e)
+  }
+
+  const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
+  params.headers.Authorization = `Bearer ${decryptedSquareOauth2Token}`;
+
+  const postItemToSquare = fetch(`https://connect.${real}.com/v2/catalog/batch-upsert`,
+    {
+      method: 'post',
+      body: body,
+      headers: params.headers
+    })
+    .then(res => res.json())
+
+  const getAliImage = fetch(itemObject.image).then(res => res.buffer());
+
+  Promise.all([postItemToSquare, getAliImage])
+    .then(
+      ([squareResponse, aliImage]) => {
+        console.log('++++++++++++++++ Square Json +++++++++++++++++++++');
+        console.log(`the name is ${itemObject.name}`)
+        console.log(squareResponse);
+        const itemId = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].id;
+        // const itemId = squareResponse.id_mappings.filter(obj => obj.client_object_id === `#${itemObject.name}`)[0];
+
+        console.log('++++++++++++++++ ItemId +++++++++++++++++++++');
+        console.log(itemId);
+        const imageFormJson = {
+          "idempotency_key": uuid(),
+          "object_id": itemId,
+          "image": {
+            "id": "#TEMP_ID",
+            "type": "IMAGE",
+            "image_data": {
+              "caption": itemObject.name
+            }
+          }
+        };
+
+        let form = new FormData();
+
+        form.append('request', JSON.stringify(imageFormJson),
+          {
+            contentType: 'application/json'
+          });
+
+        form.append('image', aliImage,
+          {
+            contentType: 'image/jpeg',
+            filename: 'test.jpg'
+          });
+
+        fetch('https://connect.squareup.com/v2/catalog/images',
+          {
+            method: 'post',
+            body: form,
+            headers: {
+              "Content-type": `multipart/form-data;boundary="${form.getBoundary()}"`,
+              "Accept": "application/json",
+              "Authorization": `Bearer ${decryptedSquareOauth2Token}`,
+              "Square-Version": "2020-01-22",
+            }
+          })
+          .then(
+            res => res.json()
+          )
+          .then(json => console.log(json))
+          .catch(
+            err => console.log(err)
+          )
+      }
+    ).catch(err => console.log(err));
+};
+
+const mockEvent = {
+  headers: {
+    Authorization: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcXVhcmVJbmZvIjp7ImFjY2Vzc190b2tlbiI6IlBGQXdJNVdFWDlaZStLNlNrMWd1eC9YeEVuUytVOGlFWGpIZkN5YzNCbFJ2UkIzL1k3b3krVktqK09vQVY2TnorbytnR0krZG1RTFVpelo1Qk9BcnFHVUg2K1NPdHJMUXF5NVJiMW1ZbGlrK1lGRTNoSnYwckJtV2diTGtWa2JuYzR6NTgzaXdzblRGczRCbW1XLy9KUGt4eEZZbVA5SkRnZUJtQXJtd3VGMnBCekFhRXdGYzFuVE81a1I4STRkbzRIY0s4NVJHQmFQcUhTcDVHRG5hOVE9PSIsInRva2VuX3R5cGUiOiJiZWFyZXIiLCJleHBpcmVzX2F0IjoiMjAyMC0wMy0xOVQxMTozNjoxNloiLCJtZXJjaGFudF9pZCI6IjhGMzQ5QkZCSjVGVzEiLCJyZWZyZXNoX3Rva2VuIjoibmJETGpraUxYM1JieVl5OHBLTERYS2s2QjFnbmdCWE9Ib1hodStTa2pQajhiNHU2NnFBUktucXRJUDhtZzBEODlYNmt6S3B1Z1dJMldYNlY0UUp0K0Mvb0Q5Z1ltZWFRWGR5MTRJRVJTRkZkM3NoeDk4UENxdTBCRnVvQTN5dmZoTml0MDIrVTNaU2Evb0dhanh4VXgya2RLdys5UGpUS1huYnljNnFZTVp2TGNYaWc1NEVnZStRZ2dUMmlOeGVoZjYwZkVDb0t6bStkYldNL3oyd3dXdz09In0sInNjb3BlcyI6WyJpdGVtcyJdLCJpYXQiOjE1ODIwMjU3NzZ9.hQh_NMb7lxQT3avnmGquycGUlVqdl-pzgxuuracRv50exgbrwMQhSXJe8n8lrI7QPPMUtX3kOKj4BIVCzMYu7Wp5QZa3Q4wz8x6FXXxHviP_b7CRtZ7HTXloKhrjZesq38lMKQGvnOZnZ6q9uwnhQ_9gSD5Thf4gIhfeAHC_SaQ"
+  },
+  body: JSON.stringify({
+    itemFromClient: {
+      "id": 4000386069867,
+      "name": "this is a test",
+      "desc": "Online Shopping at a cheapest price for Automotive, Phones & Accessories, Computers & Electronics, Fashion, Beauty & Health, Home &          Garden, Toys & Sports, Weddings & Events and more; just about anything else    Enjoy âFree Shipping Worldwide! âLimited Time SaleÂ âEasy Return.",
+      "image": "https://ae01.alicdn.com/kf/U3accc565725946589bf671efa40218c4U/AUN-LED-HD-Projector-D60-1280x720P-Resolution-Support-3D-video-Beamer-Home-Cinema-Optional-Android-WIFI.jpg",
+      "options": [
+          {
+              "name": "Ships From",
+              "values": [
+                  {
+                      "name": "China"
+                  },
+                  {
+                      "name": "United States"
+                  },
+                  {
+                      "name": "Spain"
+                  },
+                  {
+                      "name": "Australia"
+                  },
+                  {
+                      "name": "Russian Federation"
+                  },
+                  {
+                      "name": "France"
+                  },
+                  {
+                      "name": "Italy"
+                  }
+              ]
+          },
+          {
+              "name": "Color",
+              "values": [
+                  {
+                      "name": "D60"
+                  },
+                  {
+                      "name": "D60S"
+                  }
+              ]
+          }
+      ]
+  }})
+};
+
+
+const postImg = async () => {
+
+  let decodedjwt;
+  try {
+    decodedjwt = jwt.verify("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcXVhcmVJbmZvIjp7ImFjY2Vzc190b2tlbiI6IldxNWpxZmY5T0k5cEhETEQ3WXVlSEN3T0twUWw3UTVqRjJwY2MzQXZBRm0zYy9rNjdKRkMxU0UvTDY3NEZ5UzRYR3dZQnd3dFJEUjFQVXJ3eWVUS3VYd0NTaFZiVS9hM0cvU3dsQmdIT05qNHpnS29SY0pNbVRwUG1Cc0pRcTVzZmFlZXQwKzRrckNBV2JnRHFNdi9XVlY4QmlzK1dObndtWXpOUGRTV3FKM282NGJWL08wRUZxbm43dmYwOWVDUlZhNHkxU0VROU4rSnM0RWpzTHZTdVE9PSIsInRva2VuX3R5cGUiOiJiZWFyZXIiLCJleHBpcmVzX2F0IjoiMjAyMC0wMy0xOVQyMjowNjozNloiLCJtZXJjaGFudF9pZCI6IjhGMzQ5QkZCSjVGVzEiLCJyZWZyZXNoX3Rva2VuIjoiNnBzMWdvSzdxWHFKcFNjSUVVb29HRCtyUGhGVTVsZ3pFMkxPMmo0SXl6M3lobVcxK01xNDMzMXZlSVdkaXpGUFRuRVpmeGFrQ0RqL2x1dEV5Tm91djJZbElrN014ZHBqQzBta3dvMHVZeFlpN3BEczhhc2R4SWllVGo1N0NDRTZtWTZTSGxxSHY2RWpTMjZzL013VGtRRmlkcVNIL3dVTUJzRHZ6NE1WSjJZK0RyVEkyWkV4Ym1jRnZVQlRBZmQxVytJSHBvaU5acnQ1NXp4K041anVsQT09In0sInNjb3BlcyI6WyJpdGVtcyJdLCJpYXQiOjE1ODIwNjM1OTZ9.Vgdnl91zRfsgyYm_PcVk-YIQRRAhsIHgkN867rrXbTx_MB7C3ZuOX1vks-yk5k0aAdaC_0W6IPt4F30YQI2FYuyZR1Gx7laAchnWLll9ywhwtu1G_QmGvr6MX2KcrO1ERwBrUAkBOH73M3fRW9h3DrB2w4JpuU-PkNGOx2LUbKc")
+  } catch (e) {
+    console.log("++++++++++++++++++++++++++++++++++ COULDNT DECODE +++++++++++++++++++")
+  }
+
+  const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
+  console.log('++++++++++++++++++++ TOKEN +++++++++++++++++++++');
+  console.log(decryptedSquareOauth2Token);
+  const itemId = "2ZMIH3XBXQDKQCXD7JV7SR6W";
+  const itemName = "testname"
+  const caption = "test test test"
+  const imageUrl = "https://ae01.alicdn.com/kf/HTB1Ko3lX.z1gK0jSZLeq6z9kVXaa/Original-Razer-DeathAdder-Essential-Wired-Gaming-Mouse-Mice-6400DPI-Optical-Sensor-5-Independently-Buttons-For-Laptop.jpg"
+  const imageFormJson = {
+    "idempotency_key": uuid(),
+    "object_id": itemId,
+    "image": {
+      "id": "#TEMP_ID",
+      "type": "IMAGE",
+      "image_data": {
+        "caption": caption
+      }
+    }
+  };
+
+  const aliImage = await fetch(imageUrl).then(res => res.buffer())
+
+
+  let form = new FormData();
+
+  form.append('request', JSON.stringify(imageFormJson),
+    {
+      contentType: 'application/json'
+    });
+
+  form.append('image', aliImage,
+    {
+      contentType: 'image/jpeg',
+      filename: 'test.jpg'
+    });
+
+  console.log(form);
+
+  fetch('https://connect.squareup.com/v2/catalog/images',
+    {
+      method: 'post',
+      body: form,
+      headers: {
+        "Content-type": `multipart/form-data;boundary="${form.getBoundary()}"`,
+        "Accept": "application/json",
+        "Authorization": `Bearer ${decryptedSquareOauth2Token}`,
+        "Square-Version": "2020-01-22",
+      }
+    })
+    .then(
+      res => res.json()
+    )
+    .then(json => console.log(json))
+    .catch(
+      err => console.log(err)
+    )
 }
 
-get()
+post(mockEvent);
+
+
+
+
+// const he = {"Content-Disposition": `form-data; name="${itemName}"; filename="${itemName}.${getImageType(imageUrl).toLowerCase()}"` }
+
+  // form.submit({
+  //   host: 'connect.squareupsandbox.com',
+  //   path: '/v2/catalog/images',
+  //   headers: {
+  //     "Content-type": `multipart/form-data;boundary="${form.getBoundary()}"`,
+  //     "Accept" : "application/json",
+  //     "Authorization" : `Bearer ${decryptedSquareOauth2Token}`,
+  //     "Square-Version":  "2020-01-22",
+  //     "Cache-Control": "no-cache"
+  //   }
+  // }, function(err, res) {
+  //   if(res != undefined){
+  //   console.log('response status is : ' + res.statusCode);
+  //   console.log('body is : ' + res)}
+  //   else
+  //   {console.log('error? : ' + err)}
+  // });

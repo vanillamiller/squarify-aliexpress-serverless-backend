@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const masterkeyBuffer = Buffer.from(process.env.MASTER_KEY, 'hex');
+const masterkeyBuffer = Buffer.from("tesing", 'hex');
 
 module.exports = {
     /**
