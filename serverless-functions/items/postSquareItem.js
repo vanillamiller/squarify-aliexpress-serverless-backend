@@ -96,12 +96,10 @@ exports.post = async (event, context, callback) => {
   await Promise.all([postItemToSquare, getAliImage])
     .then(
       ([squareResponse, aliImage]) => {
-        // console.log('++++++++++++++++ Square Json +++++++++++++++++++++');
-        // console.log(squareResponse);
+        
         const itemId = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].id;
         const itemName = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].name;
-        // console.log('++++++++++++++++ ItemId +++++++++++++++++++++');
-        // console.log(itemId);
+        
         const imageFormJson = {
           "idempotency_key": uuid(),
           "object_id": itemId,
