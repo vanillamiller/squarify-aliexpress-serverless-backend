@@ -1,9 +1,10 @@
 
 'use strict';
-const https = require('https');
-let Item = require('./item.js').Item;
+const fetch = require('node-fetch')
+let Item = require('./item').Item;
 const jwt = require('../auth/jwtModule');
 const decrypt = require('../auth/encryption').decrypt;
+const uuid = require('uuid');
 const FormData = require('form-data');
 const real = "squareup";
 const sandbox = "squareupsandbox";
@@ -14,62 +15,72 @@ let params = {
   port: 443,
   method: "POST",
   headers: {
-    "Square-Version" : "2020-01-22",
-    "Content-type" : "application/json",
+    "Square-Version": "2020-01-22",
+    "Content-type": "application/json",
+    "Accept": "application/json",
   }
 };
 
-const successResponse =  {
+const successResponse = {
   statusCode: 200,
   headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true,
-      'Content-type': 'application/json'
-  },
-  body: JSON.stringify({message : 'Item uploaded successfully'}),
-};
-
-const errorResponse = {
-  statusCode : 500,
-  headers : {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Credentials': true,
-    'Content-type' : 'application/json'
+    'Content-type': 'application/json'
   },
-  body : JSON.stringify({message : 'something went wrong with your authorization token!'})
+  body: JSON.stringify({ message: 'Item uploaded successfully' }),
 };
+
+const errorResponse = (err) => ({
+  statusCode: 500,
+  headers: {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Credentials': true,
+    'Content-type': 'application/json'
+  },
+  body: JSON.stringify({ message: err })
+});
 
 const getImageType = (imageUrl) => imageUrl.split('.').pop();
 
 const generateContentTypeHeader = (imageType) => {
-  switch(imageType) {
-  case 'jpg' || 'jpeg' || 'JPEG':
-    return 'image/JPEG';
-  case 'png' || 'PNG':
-    return 'image/PNG';
-  case 'gif' || 'GIF':
-    return 'image/GIF';
-  case 'pjpeg' || 'PJPEG':
-    return 'image/PJPEG'
-  default:
-    throw Error('unknown image extension');
-}};
+  switch (imageType) {
+    case 'jpg' || 'jpeg' || 'JPEG':
+      return 'image/JPEG';
+    case 'png' || 'PNG':
+      return 'image/PNG';
+    case 'gif' || 'GIF':
+      return 'image/GIF';
+    case 'pjpeg' || 'PJPEG':
+      return 'image/PJPEG'
+    default:
+      throw Error('unknown image extension');
+  }
+};
 
 
 
 exports.post = async (event, context, callback) => {
 
   const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
-    const itemObject = new Item(itemFromEventJson);
-    const body = JSON.stringify(itemObject.toSquareItem());
-    const encodedjwt = event['headers']['Authorization'];
-    let decodedjwt;
+  const itemObject = new Item(itemFromEventJson);
+  const body = JSON.stringify(itemObject.toSquareItem());
+  const encodedjwt = event['headers']['Authorization'];
+  let decodedjwt;
 
-    try{
-      decodedjwt = jwt.verify(encodedjwt)
-    } catch(e){
-      callback(null, errorResponse);
-    }
+  try {
+    decodedjwt = jwt.verify(encodedjwt)
+  } catch (e) {
+    callback(null, {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+        'Content-type': 'application/json'
+      },
+      body: JSON.stringify(encodedjwt)
+    })
+  }
 
   const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
   params.headers.Authorization = `Bearer ${decryptedSquareOauth2Token}`;
@@ -80,19 +91,19 @@ exports.post = async (event, context, callback) => {
       body: body,
       headers: params.headers
     })
-    .then(res => res.json())
+    .then(res => res.json()).catch(err => callback(null, errorResponse(err)))
 
-  const getAliImage = fetch(itemObject.image).then(res => res.buffer());
+  const getAliImage = fetch(itemObject.image).then(res => res.buffer()).catch(err => callback(null, errorResponse(err)));
 
-  Promise.all([postItemToSquare, getAliImage])
+  await Promise.all([postItemToSquare, getAliImage])
     .then(
       ([squareResponse, aliImage]) => {
-        console.log('++++++++++++++++ Square Json +++++++++++++++++++++');
-        console.log(`the name is ${itemObject.name}`)
-        console.log(squareResponse);
+        // console.log('++++++++++++++++ Square Json +++++++++++++++++++++');
+        // console.log(squareResponse);
         const itemId = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].id;
-        console.log('++++++++++++++++ ItemId +++++++++++++++++++++');
-        console.log(itemId);
+        const itemName = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].name;
+        // console.log('++++++++++++++++ ItemId +++++++++++++++++++++');
+        // console.log(itemId);
         const imageFormJson = {
           "idempotency_key": uuid(),
           "object_id": itemId,
@@ -100,7 +111,7 @@ exports.post = async (event, context, callback) => {
             "id": "#TEMP_ID",
             "type": "IMAGE",
             "image_data": {
-              "caption": itemObject.name
+              "caption": itemName
             }
           }
         };
@@ -132,12 +143,12 @@ exports.post = async (event, context, callback) => {
           .then(
             res => res.json()
           )
-          .then( 
-            callback(null, successResponse) 
+          .then(
+            callback(null, successResponse)
           )
           .catch(
-            callback(null, errorResponse)
+            callback(null, errorResponse('posting image error'))
           )
       }
-    ).catch(callback(null, errorResponse));
+    ).catch(err => callback(null, errorResponse(err)));
 };

@@ -5,7 +5,6 @@ let Item = require('./serverless-functions/items/item').Item;
 const jwt = require('./serverless-functions/auth/jwtModule');
 const decrypt = require('./serverless-functions/auth/encryption').decrypt;
 const uuid = require('uuid');
-const { Readable } = require('stream');
 const FormData = require('form-data');
 const real = "squareup";
 const sandbox = "squareupsandbox";
@@ -151,7 +150,7 @@ const mockEvent = {
   body: JSON.stringify({
     itemFromClient: {
       "id": 4000386069867,
-      "name": "1111111aaaaaa",
+      "name": "this is a test",
       "desc": "Online Shopping at a cheapest price for Automotive, Phones & Accessories, Computers & Electronics, Fashion, Beauty & Health, Home &          Garden, Toys & Sports, Weddings & Events and more; just about anything else    Enjoy âFree Shipping Worldwide! âLimited Time SaleÂ âEasy Return.",
       "image": "https://ae01.alicdn.com/kf/U3accc565725946589bf671efa40218c4U/AUN-LED-HD-Projector-D60-1280x720P-Resolution-Support-3D-video-Beamer-Home-Cinema-Optional-Android-WIFI.jpg",
       "options": [
