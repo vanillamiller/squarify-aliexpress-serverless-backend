@@ -58,8 +58,6 @@ const generateContentTypeHeader = (imageType) => {
   }
 };
 
-
-
 exports.post = async (event, context, callback) => {
 
   const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
