@@ -162,14 +162,16 @@ const mockEvent = {
 
 const postImg = async () => {
 
-  // let decodedjwt;
-  // try {
-  //   decodedjwt = jwt.verify("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcXVhcmVJbmZvIjp7ImFjY2Vzc190b2tlbiI6IldxNWpxZmY5T0k5cEhETEQ3WXVlSEN3T0twUWw3UTVqRjJwY2MzQXZBRm0zYy9rNjdKRkMxU0UvTDY3NEZ5UzRYR3dZQnd3dFJEUjFQVXJ3eWVUS3VYd0NTaFZiVS9hM0cvU3dsQmdIT05qNHpnS29SY0pNbVRwUG1Cc0pRcTVzZmFlZXQwKzRrckNBV2JnRHFNdi9XVlY4QmlzK1dObndtWXpOUGRTV3FKM282NGJWL08wRUZxbm43dmYwOWVDUlZhNHkxU0VROU4rSnM0RWpzTHZTdVE9PSIsInRva2VuX3R5cGUiOiJiZWFyZXIiLCJleHBpcmVzX2F0IjoiMjAyMC0wMy0xOVQyMjowNjozNloiLCJtZXJjaGFudF9pZCI6IjhGMzQ5QkZCSjVGVzEiLCJyZWZyZXNoX3Rva2VuIjoiNnBzMWdvSzdxWHFKcFNjSUVVb29HRCtyUGhGVTVsZ3pFMkxPMmo0SXl6M3lobVcxK01xNDMzMXZlSVdkaXpGUFRuRVpmeGFrQ0RqL2x1dEV5Tm91djJZbElrN014ZHBqQzBta3dvMHVZeFlpN3BEczhhc2R4SWllVGo1N0NDRTZtWTZTSGxxSHY2RWpTMjZzL013VGtRRmlkcVNIL3dVTUJzRHZ6NE1WSjJZK0RyVEkyWkV4Ym1jRnZVQlRBZmQxVytJSHBvaU5acnQ1NXp4K041anVsQT09In0sInNjb3BlcyI6WyJpdGVtcyJdLCJpYXQiOjE1ODIwNjM1OTZ9.Vgdnl91zRfsgyYm_PcVk-YIQRRAhsIHgkN867rrXbTx_MB7C3ZuOX1vks-yk5k0aAdaC_0W6IPt4F30YQI2FYuyZR1Gx7laAchnWLll9ywhwtu1G_QmGvr6MX2KcrO1ERwBrUAkBOH73M3fRW9h3DrB2w4JpuU-PkNGOx2LUbKc")
-  // } catch (e) {
-  //   console.log(e)
-  // }
+  let decodedjwt;
+  try {
+    decodedjwt = jwt.verify("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcXVhcmVJbmZvIjp7ImFjY2Vzc190b2tlbiI6IldxNWpxZmY5T0k5cEhETEQ3WXVlSEN3T0twUWw3UTVqRjJwY2MzQXZBRm0zYy9rNjdKRkMxU0UvTDY3NEZ5UzRYR3dZQnd3dFJEUjFQVXJ3eWVUS3VYd0NTaFZiVS9hM0cvU3dsQmdIT05qNHpnS29SY0pNbVRwUG1Cc0pRcTVzZmFlZXQwKzRrckNBV2JnRHFNdi9XVlY4QmlzK1dObndtWXpOUGRTV3FKM282NGJWL08wRUZxbm43dmYwOWVDUlZhNHkxU0VROU4rSnM0RWpzTHZTdVE9PSIsInRva2VuX3R5cGUiOiJiZWFyZXIiLCJleHBpcmVzX2F0IjoiMjAyMC0wMy0xOVQyMjowNjozNloiLCJtZXJjaGFudF9pZCI6IjhGMzQ5QkZCSjVGVzEiLCJyZWZyZXNoX3Rva2VuIjoiNnBzMWdvSzdxWHFKcFNjSUVVb29HRCtyUGhGVTVsZ3pFMkxPMmo0SXl6M3lobVcxK01xNDMzMXZlSVdkaXpGUFRuRVpmeGFrQ0RqL2x1dEV5Tm91djJZbElrN014ZHBqQzBta3dvMHVZeFlpN3BEczhhc2R4SWllVGo1N0NDRTZtWTZTSGxxSHY2RWpTMjZzL013VGtRRmlkcVNIL3dVTUJzRHZ6NE1WSjJZK0RyVEkyWkV4Ym1jRnZVQlRBZmQxVytJSHBvaU5acnQ1NXp4K041anVsQT09In0sInNjb3BlcyI6WyJpdGVtcyJdLCJpYXQiOjE1ODIwNjM1OTZ9.Vgdnl91zRfsgyYm_PcVk-YIQRRAhsIHgkN867rrXbTx_MB7C3ZuOX1vks-yk5k0aAdaC_0W6IPt4F30YQI2FYuyZR1Gx7laAchnWLll9ywhwtu1G_QmGvr6MX2KcrO1ERwBrUAkBOH73M3fRW9h3DrB2w4JpuU-PkNGOx2LUbKc")
+  } catch (e) {
+    console.log("++++++++++++++++++++++++++++++++++ COULDNT DECODE +++++++++++++++++++")
+  }
 
   const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
+  console.log('++++++++++++++++++++ TOKEN +++++++++++++++++++++');
+  console.log(decryptedSquareOauth2Token);
   const itemId = "2ZMIH3XBXQDKQCXD7JV7SR6W";
   const itemName = "testname"
   const caption = "test test test"
@@ -186,12 +188,13 @@ const postImg = async () => {
     }
   };
 
-  const aliImage = await fetch(imageUrl).then(res => res.buffer()).then(buffer => new Readable({
-    read() {
-      this.push(buffer);
-      this.push(null);
-    }
-  }));
+  const aliImage = await fetch(imageUrl).then(res => res.buffer())
+  // .then(buffer => new Readable({
+  //   read() {
+  //     this.push(buffer);
+  //     this.push(null);
+  //   }
+  // }));
 
   let form = new FormData();
   // const imageFormBuffer = Buffer.from(JSON.stringify(imageFormJson));
@@ -203,33 +206,16 @@ const postImg = async () => {
       
   form.append('image', aliImage,
   {
-    header : '\r\n' + '--' + form.getBoundary() + '\r\n' + 
-      `Content-Disposition: form-data; name="image"; filename="${itemName}.jpg"`
-      + '\r\n' + `Content-type : ${generateContentTypeHeader(imageUrl)}`
-    // contentType : "image/jpeg",
-    // filename : "test.jpg"
+    // header : '\r\n' + '--' + form.getBoundary() + '\r\n' + 
+    //   `Content-Disposition: form-data; name="image"; filename="${itemName}.jpg"`
+    //   + '\r\n' + `Content-type : ${generateContentTypeHeader(imageUrl)}`,
+    contentType : 'image/jpeg',
+    filename : 'test.jpg'
   });
 
-
   console.log(form);
-  // form.submit({
-  //   host: 'connect.squareupsandbox.com',
-  //   path: '/v2/catalog/images',
-  //   headers: {
-  //     "Content-type": `multipart/form-data;boundary="${form.getBoundary()}"`,
-  //     "Accept" : "application/json",
-  //     "Authorization" : `Bearer ${decryptedSquareOauth2Token}`,
-  //     "Square-Version":  "2020-01-22",
-  //     "Cache-Control": "no-cache"
-  //   }
-  // }, function(err, res) {
-  //   if(res != undefined){
-  //   console.log('response status is : ' + res.statusCode);
-  //   console.log('body is : ' + res)}
-  //   else
-  //   {console.log('error? : ' + err)}
-  // });
-  fetch('https://connect.squareupsandbox.com/v2/catalog/images',
+
+  fetch('https://connect.squareup.com/v2/catalog/images',
     {
       method: 'post',
       body: form,
@@ -255,3 +241,21 @@ postImg();
   
 
 // const he = {"Content-Disposition": `form-data; name="${itemName}"; filename="${itemName}.${getImageType(imageUrl).toLowerCase()}"` }
+
+  // form.submit({
+  //   host: 'connect.squareupsandbox.com',
+  //   path: '/v2/catalog/images',
+  //   headers: {
+  //     "Content-type": `multipart/form-data;boundary="${form.getBoundary()}"`,
+  //     "Accept" : "application/json",
+  //     "Authorization" : `Bearer ${decryptedSquareOauth2Token}`,
+  //     "Square-Version":  "2020-01-22",
+  //     "Cache-Control": "no-cache"
+  //   }
+  // }, function(err, res) {
+  //   if(res != undefined){
+  //   console.log('response status is : ' + res.statusCode);
+  //   console.log('body is : ' + res)}
+  //   else
+  //   {console.log('error? : ' + err)}
+  // });
