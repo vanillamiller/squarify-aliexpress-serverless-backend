@@ -38,7 +38,7 @@ const errorResponse = (err) => ({
     'Access-Control-Allow-Credentials': true,
     'Content-type': 'application/json'
   },
-  body: JSON.stringify({ message: err.message })
+  body: JSON.stringify({ message: err })
 });
 
 const getImageType = (imageUrl) => imageUrl.split('.').pop();
@@ -58,6 +58,8 @@ const generateContentTypeHeader = (imageType) => {
   }
 };
 
+
+
 exports.post = async (event, context, callback) => {
 
   const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
@@ -76,7 +78,7 @@ exports.post = async (event, context, callback) => {
         'Access-Control-Allow-Credentials': true,
         'Content-type': 'application/json'
       },
-      body: JSON.stringify({ message: 'Your token is invalid' })
+      body: JSON.stringify(encodedjwt)
     })
   }
 
@@ -89,26 +91,19 @@ exports.post = async (event, context, callback) => {
       body: body,
       headers: params.headers
     })
-    .then(res => {
-      console.log('status code' + res.status)
-      if(res.status == 200){
-        return res.json();
-      }
-      else{
-        return Error('could not upload item to square!!')
-      }
-    }
-    );
+    .then(res => res.json()).catch(err => callback(null, errorResponse(err)))
 
-  const getAliImage = fetch(itemObject.image).then(res => res.buffer()).catch(err => Error('something went wrong with getting image'));
+  const getAliImage = fetch(itemObject.image).then(res => res.buffer()).catch(err => callback(null, errorResponse(err)));
 
-  const response = await Promise.all([postItemToSquare, getAliImage])
+  await Promise.all([postItemToSquare, getAliImage])
     .then(
       ([squareResponse, aliImage]) => {
-        console.log(squareResponse);
+        // console.log('++++++++++++++++ Square Json +++++++++++++++++++++');
+        // console.log(squareResponse);
         const itemId = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].id;
         const itemName = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].name;
-
+        // console.log('++++++++++++++++ ItemId +++++++++++++++++++++');
+        // console.log(itemId);
         const imageFormJson = {
           "idempotency_key": uuid(),
           "object_id": itemId,
@@ -149,13 +144,11 @@ exports.post = async (event, context, callback) => {
             res => res.json()
           )
           .then(
-            success => successResponse
+            callback(null, successResponse)
           )
           .catch(
-            err => Error('something went worng with uploading image')
+            callback(null, errorResponse('posting image error'))
           )
       }
-    ).catch(err => errorResponse(err));
-
-  return response;
+    ).catch(err => callback(null, errorResponse(err)));
 };
