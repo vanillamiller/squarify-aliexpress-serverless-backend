@@ -151,15 +151,16 @@ const generateErrorResponse = (e) => ({
     isBase64Encoded : false
 })
 
-exports.get = async (event, context, callback) => 
-    await fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
+exports.get = (event, context, callback) => 
+    fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
     .then(
         res => res.text()
     .then(
         body => {
+            console.log(body);
             let aliData;
             try{
-                aliData = parseAliData(body)
+                aliData = parseAliData(body);
             }catch(e){
                 e => callback(null, generateErrorResponse(e.message))
             }
