@@ -38,7 +38,7 @@ const errorResponse = (err) => ({
     'Access-Control-Allow-Credentials': true,
     'Content-type': 'application/json'
   },
-  body: JSON.stringify({ message: err })
+  body: JSON.stringify({ message: err.message })
 });
 
 const getImageType = (imageUrl) => imageUrl.split('.').pop();
@@ -76,7 +76,7 @@ exports.post = async (event, context, callback) => {
         'Access-Control-Allow-Credentials': true,
         'Content-type': 'application/json'
       },
-      body: JSON.stringify(encodedjwt)
+      body: JSON.stringify({ message: 'Your token is invalid' })
     })
   }
 
@@ -89,17 +89,26 @@ exports.post = async (event, context, callback) => {
       body: body,
       headers: params.headers
     })
-    .then(res => res.json()).catch(err => callback(null, errorResponse(err)))
+    .then(res => {
+      console.log('status code' + res.status)
+      if(res.status == 200){
+        return res.json();
+      }
+      else{
+        return Error('could not upload item to square!!')
+      }
+    }
+    );
 
-  const getAliImage = fetch(itemObject.image).then(res => res.buffer()).catch(err => callback(null, errorResponse(err)));
+  const getAliImage = fetch(itemObject.image).then(res => res.buffer()).catch(err => Error('something went wrong with getting image'));
 
-  await Promise.all([postItemToSquare, getAliImage])
+  const response = await Promise.all([postItemToSquare, getAliImage])
     .then(
       ([squareResponse, aliImage]) => {
-        
+        console.log(squareResponse);
         const itemId = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].id;
         const itemName = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].name;
-        
+
         const imageFormJson = {
           "idempotency_key": uuid(),
           "object_id": itemId,
@@ -140,11 +149,13 @@ exports.post = async (event, context, callback) => {
             res => res.json()
           )
           .then(
-            callback(null, successResponse)
+            success => successResponse
           )
           .catch(
-            callback(null, errorResponse('posting image error'))
+            err => Error('something went worng with uploading image')
           )
       }
-    ).catch(err => callback(null, errorResponse(err)));
+    ).catch(err => errorResponse(err));
+
+  return response;
 };
