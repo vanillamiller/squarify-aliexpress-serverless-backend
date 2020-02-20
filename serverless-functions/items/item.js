@@ -51,7 +51,7 @@ class Item {
     toSquareItem() {
 
         let req = { "idempotency_key": uuid() };
-        
+
         let objects = [];
         let object = {
             "type": "ITEM",
@@ -95,8 +95,8 @@ class Item {
         }
 
         let image_data = {
-            "url" : this.image,
-            "name" : `${this.name} image`,
+            "url": this.image,
+            "name": `${this.name} image`,
         };
         // insert the item into the batch objects with the accompanying options and return 
         // the appropriate request body
@@ -124,7 +124,7 @@ const parseAliData = (data) => {
         let scrapedAliData = scrape(data.toString())
         return new Item(scrapedAliData);
     } catch (e) {
-        throw e;
+        throw Error('something wrong with parsing Ali Data');
     }
 }
 
@@ -136,8 +136,8 @@ const generateSuccessResponse = (successfulItem) => ({
         'Content-type': 'application/json'
     },
     body: JSON.stringify(successfulItem),
-    isBase64Encoded : false
-    
+    isBase64Encoded: false
+
 })
 
 const generateErrorResponse = (e) => ({
@@ -147,25 +147,30 @@ const generateErrorResponse = (e) => ({
         'Access-Control-Allow-Credentials': true,
         'Content-type': 'application/json'
     },
-    body: JSON.stringify({message : e.message}),
-    isBase64Encoded : false
+    body: JSON.stringify({ message: e.message }),
+    isBase64Encoded: false
 })
 
-exports.get = (event, context, callback) => 
-    fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
-    .then(
-        res => res.text()
-    .then(
-        body => {
-            console.log(body);
-            try{
-                const aliItem = parseAliData(body);
-                callback(null, generateSuccessResponse(aliItem))
-                console.log(`++++++++++++ item name is: ${aliItem.name} ++++++++++++++++++++`)
-            }catch(e){
-                e => callback(null, generateErrorResponse(e.message))
-            }
+exports.get = async (event, context, callback) => {
+
+    const response = await fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
+        .then(
+            res => res.text()
+        )
+        .then(
+            body => {
+                console.log(body);
+                try {
+                    const aliItem = parseAliData(body);
+                    console.log(`++++++++++++++++++++++++ the name is : ${aliItem.name} ++++++++++++++++++++++++++++`);
+                    return generateSuccessResponse(aliItem);
+                } catch (e) {
+                    return generateErrorResponse(e.message)
+                }
             })
-    .catch(err =>  callback(null, generateErrorResponse(Error('could not get item from aliExpress')))));
+        .catch(err => generateErrorResponse(Error('could not get item from aliExpress')));
+
+    return response;
+}
 
 module.exports.Item = Item;
