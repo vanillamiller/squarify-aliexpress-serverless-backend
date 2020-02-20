@@ -158,13 +158,13 @@ exports.get = (event, context, callback) =>
     .then(
         body => {
             console.log(body);
-            let aliData;
             try{
-                aliData = parseAliData(body);
+                const aliItem = parseAliData(body);
+                callback(null, generateSuccessResponse(aliItem))
+                console.log(`++++++++++++ item name is: ${aliItem.name} ++++++++++++++++++++`)
             }catch(e){
                 e => callback(null, generateErrorResponse(e.message))
             }
-            callback(null, generateSuccessResponse(aliData))
             })
     .catch(err =>  callback(null, generateErrorResponse(Error('could not get item from aliExpress')))));
 
