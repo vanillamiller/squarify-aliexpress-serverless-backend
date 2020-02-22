@@ -91,7 +91,12 @@ exports.post = async (event, context, callback) => {
       body: body,
       headers: params.headers
     })
-    .then(res => res.json()).catch(err => callback(null, errorResponse(err)))
+    .then(res => res.json())
+    .then(json => {
+      console.log(json);
+      return json
+    })
+    .catch(err => callback(null, errorResponse(err)))
 
   const getAliImage = fetch(itemObject.image).then(res => res.buffer()).catch(err => callback(null, errorResponse(err)));
 
@@ -142,6 +147,12 @@ exports.post = async (event, context, callback) => {
           })
           .then(
             res => res.json()
+          )
+          .then(
+            json => {
+              console.log(json);
+              return json
+            }
           )
           .then(
             callback(null, successResponse)

@@ -111,6 +111,7 @@ const scrape = (data) => {
     try {
         // remove the dangling comma and all redundant stuff after and return
         let cleaned = data.match(/data: \{.*\}/g)[0].replace(/[\n\r]/g, '');
+        console.log('+++++++++++++++++++++++++++++ here is cleaned: ' + cleaned);
         cleaned = cleaned.substring(6);
         return JSON.parse(cleaned);
     } catch (e) {
@@ -165,7 +166,7 @@ exports.get = async (event, context, callback) => {
                     console.log(`++++++++++++++++++++++++ the name is : ${aliItem.name} ++++++++++++++++++++++++++++`);
                     return generateSuccessResponse(aliItem);
                 } catch (e) {
-                    return generateErrorResponse(e.message)
+                    return generateErrorResponse(e)
                 }
             })
         .catch(err => generateErrorResponse(Error('could not get item from aliExpress')));
