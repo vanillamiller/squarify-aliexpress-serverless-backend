@@ -50,16 +50,64 @@ exports.authorizer = async (event, context) => await new Promise((resolve, rejec
         statusCode: 302,
         headers: {
           "Content-type": "application/json",
-          "location" : `https://square-459ed.web.app/#/authorize?token=${token}`
+          "location": `https://square-459ed.web.app/#/authorize?token=${token}`
         },
         // body: JSON.stringify({'user' : user, 'token' : token})
       });
     });
   });
   req.on('error', (e) => {
-    resolve({statusCode : 500,
-          headers : {"Content-type" : "application/json"},
-          body : JSON.stringify({message : 'could not request access from square'})});
+    resolve({
+      statusCode: 500,
+      headers: { "Content-type": "application/json" },
+      body: JSON.stringify({ message: 'could not request access from square' })
+    });
+  });
+  // send the request
+  req.write(body);
+  req.end();
+});
+
+exports.revoker = async (event, context) => await new Promise((resolve, reject) => {
+
+  const body = JSON.stringify({
+    "client_id": process.env.CLIENT_ID,
+    "access_token": event.body.access_token
+  })
+
+  const req = https.request(params, (res) => {
+    let body = '';
+    res.on('data', function (chunk) {
+      console.log('BODY: ' + chunk);
+      body += chunk;
+    });
+
+    res.on('end', () => {
+      // parse square response
+      let responseFromSquare = JSON.parse(body);
+      responseFromSquare.success
+        ? resolve({
+          statusCode: 200,
+          headers: {
+            "Content-type": "application/json",
+          },
+          body: JSON.stringify({message : 'success'})
+        })
+        : resolve({
+          statusCode: 500,
+          headers: {
+            "Content-type": "application/json",
+          },
+          body: JSON.stringify({message : 'failure'})
+        })
+    });
+  });
+  req.on('error', (e) => {
+    resolve({
+      statusCode: 500,
+      headers: { "Content-type": "application/json" },
+      body: JSON.stringify({ message: 'failure' })
+    });
   });
   // send the request
   req.write(body);

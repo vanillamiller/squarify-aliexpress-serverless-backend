@@ -19,7 +19,7 @@ class Item {
             this.name = jsonData.titleModule.subject;
             this.price = jsonData.priceModule.formatedActivityPrice;
             this.description = jsonData.pageModule.description;
-            let optionsFromNetwork = jsonData.skuModule.productSKUPropertyList;
+            let optionsFromNetwork = jsonData.skuModule.productSKUPropertyList || [];
             this.options = optionsFromNetwork.map((p) => {
 
                 let option = {};
@@ -116,7 +116,7 @@ const scrape = (data) => {
         return JSON.parse(cleaned);
     } catch (e) {
         // if Aliexpress schema changes will not crash but return JSON parsing error
-        throw Error('problem with the schema aliExpress returned');
+        throw Error('AliExpress item redirected to login try again.');
     }
 }
 
@@ -125,7 +125,7 @@ const parseAliData = (data) => {
         let scrapedAliData = scrape(data.toString())
         return new Item(scrapedAliData);
     } catch (e) {
-        throw Error('something wrong with parsing Ali Data');
+        throw e;
     }
 }
 
