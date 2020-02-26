@@ -6,20 +6,6 @@ const jwt = require('../auth/jwtModule');
 const decrypt = require('../auth/encryption').decrypt;
 const uuid = require('uuid');
 const FormData = require('form-data');
-const real = "squareup";
-const sandbox = "squareupsandbox";
-
-// let params = {
-//   host: `connect.${real}.com`,
-//   path: "/v2/catalog/batch-upsert",
-//   port: 443,
-//   method: "POST",
-//   headers: {
-//     "Square-Version": "2020-01-22",
-//     "Content-type": "application/json",
-//     "Accept": "application/json",
-//   }
-// };
 
 const successResponse = {
   statusCode: 200,
@@ -59,60 +45,48 @@ const generateContentTypeHeader = (imageType) => {
 };
 
 const invalidTokenResponse = {
-  statusCode: 500,
+  statusCode: 400,
   headers: {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Credentials': true,
     'Content-type': 'application/json'
   },
-  body: JSON.stringify({message : 'invalid token!'})
+  body: JSON.stringify({ message: 'invalid token!' })
 }
 
-const postItemToSquare = (options) => fetch(`https://connect.${real}.com/v2/catalog/batch-upsert`,
-    options
-    )
-    .then(res => res.json())
-    .then(json => {
-      console.log(json);
-      return json
-    })
-    .catch(err => errorResponse(err));
+const postItemToSquare = (options) => fetch(`https://connect.squareup.com/v2/catalog/batch-upsert`,
+  options
+)
+  .then(res => res.json())
+  .then(json => {
+    console.log(json);
+    return json
+  })
+  .catch(err => errorResponse(err));
 
-const getAliImage = (itemObject) => 
+const getAliImage = (itemObject) =>
   fetch(itemObject.image).then(res => res.buffer()).catch(err => errorResponse(err));
 
-exports.post = async (event, context, callback) => {
+const uploadSquareImage = (options) => fetch('https://connect.squareup.com/v2/catalog/images', options)
+  .then(
+    res => res.json()
+  )
+  .then(
+    json => {
+      console.log('++++++++++++++++++++++++ here in promise all +++++++++++++++++++++++++++++++')
+      console.log(json);
+      return json
+    }
+  )
+  .then(
+    success => successResponse
+  )
+  .catch(
+    err => errorResponse('posting image error')
+  )
 
-  const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
-  const itemObject = new Item(itemFromEventJson);
-  const body = JSON.stringify(itemObject.toSquareItem());
-  const encodedjwt = event['headers']['Authorization'];
-  let decodedjwt;
-
-  try {
-    decodedjwt = jwt.verify(encodedjwt);
-  } catch (e) {
-    return invalidTokenResponse;
-  }
-
-  const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
-
-  let headers = {
-    "Square-Version": "2020-01-22",
-    "Content-type": "application/json",
-    "Accept": "application/json",
-    "Authorization" : `Bearer ${decryptedSquareOauth2Token}`
-  }
-
-  const postOptions = {
-    method: 'post',
-    body: body,
-    headers: headers
-  };
-
-  console.log(body);
-
-  return Promise.all([postItemToSquare(postOptions), getAliImage(itemObject)])
+const postSquareItemCreateSquareImage = (postItem, getImage, authToken) =>
+  Promise.all([postItem, getImage])
     .then(
       ([squareResponse, aliImage]) => {
         console.log('++++++++++++++++ Square Json +++++++++++++++++++++');
@@ -146,33 +120,55 @@ exports.post = async (event, context, callback) => {
             filename: 'test.jpg'
           });
 
-        return fetch('https://connect.squareup.com/v2/catalog/images',
-          {
-            method: 'post',
-            body: form,
-            headers: {
-              "Content-type": `multipart/form-data;boundary="${form.getBoundary()}"`,
-              "Accept": "application/json",
-              "Authorization": `Bearer ${decryptedSquareOauth2Token}`,
-              "Square-Version": "2020-01-22",
-            }
-          })
-          .then(
-            res => res.json()
-          )
-          .then(
-            json => {
-              console.log('++++++++++++++++++++++++ here in promise all +++++++++++++++++++++++++++++++')
-              console.log(json);
-              return json
-            }
-          )
-          .then(
-            success => successResponse
-          )
-          .catch(
-            err => errorResponse('posting image error')
-          )
+        const imageUploadHeaders = {
+          "Content-type": `multipart/form-data;boundary="${form.getBoundary()}"`,
+          "Accept": "application/json",
+          "Authorization": `Bearer ${authToken}`,
+          "Square-Version": "2020-01-22",
+        }
+
+        const imageUploadOptions = {
+          method: 'post',
+          body: form,
+          headers: imageUploadHeaders
+        }
+
+        return uploadSquareImage(imageUploadOptions);
       }
-    ).catch(err => errorResponse(err));
+    ).catch(err => {
+      console.log(err);
+      errorResponse('Could not upload item to square!')
+    });
+
+
+exports.post = async (event, context, callback) => {
+
+  const itemFromEventJson = JSON.parse(event['body'])['itemFromClient'];
+  const itemObject = new Item(itemFromEventJson);
+  const body = JSON.stringify(itemObject.toSquareItem());
+  const encodedjwt = event['headers']['Authorization'];
+  let decodedjwt;
+
+  try {
+    decodedjwt = jwt.verify(encodedjwt);
+  } catch (e) {
+    return invalidTokenResponse;
+  }
+
+  const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
+
+  const postItemHeaders = {
+    "Square-Version": "2020-01-22",
+    "Content-type": "application/json",
+    "Accept": "application/json",
+    "Authorization": `Bearer ${decryptedSquareOauth2Token}`
+  }
+
+  const postItemOptions = {
+    method: 'post',
+    body: body,
+    headers: postItemHeaders
+  };
+
+  return postSquareItemCreateSquareImage(postItemToSquare(postItemOptions), getAliImage(itemObject), decryptedSquareOauth2Token);
 };
