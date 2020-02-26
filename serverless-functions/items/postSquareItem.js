@@ -9,17 +9,17 @@ const FormData = require('form-data');
 const real = "squareup";
 const sandbox = "squareupsandbox";
 
-let params = {
-  host: `connect.${real}.com`,
-  path: "/v2/catalog/batch-upsert",
-  port: 443,
-  method: "POST",
-  headers: {
-    "Square-Version": "2020-01-22",
-    "Content-type": "application/json",
-    "Accept": "application/json",
-  }
-};
+// let params = {
+//   host: `connect.${real}.com`,
+//   path: "/v2/catalog/batch-upsert",
+//   port: 443,
+//   method: "POST",
+//   headers: {
+//     "Square-Version": "2020-01-22",
+//     "Content-type": "application/json",
+//     "Accept": "application/json",
+//   }
+// };
 
 const successResponse = {
   statusCode: 200,
@@ -58,7 +58,27 @@ const generateContentTypeHeader = (imageType) => {
   }
 };
 
+const invalidTokenResponse = {
+  statusCode: 500,
+  headers: {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Credentials': true,
+    'Content-type': 'application/json'
+  },
+  body: JSON.stringify({message : 'invalid token!'})
+}
 
+const postItemToSquare = (options) => fetch(`https://connect.${real}.com/v2/catalog/batch-upsert`,
+    )
+    .then(res => res.json())
+    .then(json => {
+      console.log(json);
+      return json
+    })
+    .catch(err => errorResponse(err));
+
+const getAliImage = (itemObject) => 
+  fetch(itemObject.image).then(res => res.buffer()).catch(err => errorResponse(err));
 
 exports.post = async (event, context, callback) => {
 
@@ -69,46 +89,37 @@ exports.post = async (event, context, callback) => {
   let decodedjwt;
 
   try {
-    decodedjwt = jwt.verify(encodedjwt)
+    decodedjwt = jwt.verify(encodedjwt);
   } catch (e) {
-    callback(null, {
-      statusCode: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true,
-        'Content-type': 'application/json'
-      },
-      body: JSON.stringify(encodedjwt)
-    })
+    return invalidTokenResponse;
   }
 
   const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
-  params.headers.Authorization = `Bearer ${decryptedSquareOauth2Token}`;
 
-  const postItemToSquare = fetch(`https://connect.${real}.com/v2/catalog/batch-upsert`,
-    {
-      method: 'post',
-      body: body,
-      headers: params.headers
-    })
-    .then(res => res.json())
-    .then(json => {
-      console.log(json);
-      return json
-    })
-    .catch(err => callback(null, errorResponse(err)))
+  let headers = {
+    "Square-Version": "2020-01-22",
+    "Content-type": "application/json",
+    "Accept": "application/json",
+    "Authorization" : `Bearer ${decryptedSquareOauth2Token}`
+  }
 
-  const getAliImage = fetch(itemObject.image).then(res => res.buffer()).catch(err => callback(null, errorResponse(err)));
+  const postOptions = {
+    method: 'post',
+    body: body,
+    headers: headers
+  };
 
-  await Promise.all([postItemToSquare, getAliImage])
+  console.log(body);
+
+  return Promise.all([postItemToSquare(postOptions), getAliImage(itemObject)])
     .then(
       ([squareResponse, aliImage]) => {
-        // console.log('++++++++++++++++ Square Json +++++++++++++++++++++');
-        // console.log(squareResponse);
+        console.log('++++++++++++++++ Square Json +++++++++++++++++++++');
+        console.log(squareResponse);
         const itemId = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].id;
         const itemName = squareResponse.objects.filter(obj => obj.type === 'ITEM')[0].name;
-        // console.log('++++++++++++++++ ItemId +++++++++++++++++++++');
-        // console.log(itemId);
+        console.log('++++++++++++++++ ItemId +++++++++++++++++++++');
+        console.log(itemId);
         const imageFormJson = {
           "idempotency_key": uuid(),
           "object_id": itemId,
@@ -134,7 +145,7 @@ exports.post = async (event, context, callback) => {
             filename: 'test.jpg'
           });
 
-        fetch('https://connect.squareup.com/v2/catalog/images',
+        return fetch('https://connect.squareup.com/v2/catalog/images',
           {
             method: 'post',
             body: form,
@@ -150,16 +161,17 @@ exports.post = async (event, context, callback) => {
           )
           .then(
             json => {
+              console.log('++++++++++++++++++++++++ here in promise all +++++++++++++++++++++++++++++++')
               console.log(json);
               return json
             }
           )
           .then(
-            callback(null, successResponse)
+            success => successResponse
           )
           .catch(
-            callback(null, errorResponse('posting image error'))
+            err => errorResponse('posting image error')
           )
       }
-    ).catch(err => callback(null, errorResponse(err)));
+    ).catch(err => errorResponse(err));
 };

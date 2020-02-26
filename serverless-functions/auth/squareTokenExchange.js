@@ -70,6 +70,26 @@ exports.authorizer = async (event, context) => await new Promise((resolve, rejec
 
 exports.revoker = async (event, context) => await new Promise((resolve, reject) => {
 
+  const encodedjwt = event['headers']['Authorization'];
+  let decodedjwt;
+
+  try {
+    decodedjwt = jwt.verify(encodedjwt)
+  } catch (e) {
+    callback(null, {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+        'Content-type': 'application/json'
+      },
+      body: JSON.stringify({message : 'invalid token!'})
+    })
+  }
+
+  const decryptedSquareOauth2Token = decrypt(decodedjwt.squareInfo.access_token);
+  params.headers.Authorization = `Bearer ${decryptedSquareOauth2Token}`;
+
   const body = JSON.stringify({
     "client_id": process.env.CLIENT_ID,
     "access_token": event.body.access_token
@@ -109,7 +129,7 @@ exports.revoker = async (event, context) => await new Promise((resolve, reject) 
       body: JSON.stringify({ message: 'failure' })
     });
   });
-  // send the request
+ 
   req.write(body);
   req.end();
 });

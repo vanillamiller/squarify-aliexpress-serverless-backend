@@ -152,26 +152,27 @@ const generateErrorResponse = (e) => ({
     isBase64Encoded: false
 })
 
-exports.get = async (event, context, callback) => {
+const handleAliResponse = (body) => {
+    console.log(body);
+    try {
+        const aliItem = parseAliData(body);
+        console.log(`++++++++++++++++++++++++ the name is : ${aliItem.name} ++++++++++++++++++++++++++++`);
+        return generateSuccessResponse(aliItem);
+    } catch (e) {
+        return generateErrorResponse(e)
+    }
+}
 
-    const response = await fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
+
+exports.get = async (event, context, callback) => fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
         .then(
             res => res.text()
         )
         .then(
-            body => {
-                console.log(body);
-                try {
-                    const aliItem = parseAliData(body);
-                    console.log(`++++++++++++++++++++++++ the name is : ${aliItem.name} ++++++++++++++++++++++++++++`);
-                    return generateSuccessResponse(aliItem);
-                } catch (e) {
-                    return generateErrorResponse(e)
-                }
-            })
+            body => handleAliResponse(body))
         .catch(err => generateErrorResponse(Error('could not get item from aliExpress')));
 
-    return response;
-}
+  
+
 
 module.exports.Item = Item;
