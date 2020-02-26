@@ -2,7 +2,7 @@
 
 const https = require('https');
 const jwt = require('./jwtModule');
-const decrypt = require('./encryption').decrypt;
+const decrypt = require('./encryptionModule').decrypt;
 
 const params = {
     host: "connect.squareup.com",
@@ -17,10 +17,13 @@ const params = {
     }
 };
 
-exports.handler = async (event, context) => await new Promise((resolve, reject) => {
-
+/**
+ * @param {JSON} event AWS lambda proxy event
+ * @return {JSON} AWS lambda proxy response
+ */
+exports.handler = async (event, context) => new Promise((resolve, reject) => {
+    //
     const encodedjwt = event['headers']['Authorization'];
-    console.log('++++++++++++++++++++++++ encoded jwt' + encodedjwt);
     let decodedjwt;
 
     try {

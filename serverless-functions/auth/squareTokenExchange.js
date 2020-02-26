@@ -1,10 +1,11 @@
 'use strict';
-
 const https = require('https');
 const jwt = require('./jwtModule');
-const encrypt = require('./encryption').encrypt;
+const encrypt = require('./encryptionModule').encrypt;
 
+// scopes that will be added to doc allows items read and write
 const scopes = ['items'];
+// parameters needed from Square token endpoint
 const params = {
   host: "connect.squareup.com",
   path: "/oauth2/token",
@@ -17,8 +18,13 @@ const params = {
   }
 };
 
+/**
+ * @param {JSON} event AWS Lambda proxy event
+ * @returns {JSON} AWS Lambda proxy response
+ */
 exports.handler = async (event, context) => await new Promise((resolve, reject) => {
 
+  // Construct and serialize request body
   const body = JSON.stringify({
     "client_id": process.env.CLIENT_ID,
     "client_secret": process.env.CLIENT_SECRET,
@@ -26,13 +32,20 @@ exports.handler = async (event, context) => await new Promise((resolve, reject) 
     "grant_type": "authorization_code"
   })
 
+  /**
+   * @param {JSON} params url, extension and headers for https request
+   * @returns {JSON} Lambda proxy response 
+   */
   const req = https.request(params, (res) => {
+    // initialize empty string
     let body = '';
+    // append response data packet to body on data event
     res.on('data', function (chunk) {
       console.log('BODY: ' + chunk);
       body += chunk;
     });
 
+    // on request close 
     res.on('end', () => {
       // parse square response
       let responseFromSquare = JSON.parse(body);
@@ -52,7 +65,6 @@ exports.handler = async (event, context) => await new Promise((resolve, reject) 
           "Content-type": "application/json",
           "location": `https://square-459ed.web.app/#/authorize?token=${token}`
         },
-        // body: JSON.stringify({'user' : user, 'token' : token})
       });
     });
   });
