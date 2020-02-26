@@ -7,6 +7,7 @@ getAliItem:
           cors: true
           authorizer: lambdaAuthorizerItemsReadItemsWrite
       - cloudWatchLog: '/aws/lambda/getItem'
+      
 postSquareItem:
     handler: ./serverless-functions/items/postSquareItem.post
     events:
@@ -18,4 +19,4 @@ postSquareItem:
       - cloudWatchLog: '/aws/lambda/postItem'
 
 lambdaAuthorizerItemsReadItemsWrite:
-  handler: ./serverless-functions/auth/lambdaJwtAuthorization.authorizer
+  handler: ./serverless-functions/auth/lambdaJwtAuth.handler

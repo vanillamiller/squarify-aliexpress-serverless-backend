@@ -1,17 +1,16 @@
  squareTokenExchange:
-    handler: ./serverless-functions/auth/squareTokenExchange.authorizer
+    handler: ./serverless-functions/auth/squareTokenExchange.handler
     events: 
       - http:
           method: get
           path: authorization
 
+ squareTokenRevoke:
+    handler: ./serverless-functions/auth/squareTokenRevoke.handler
+    events: 
+      - http:
+          method: get
+          path: signout
+          cors: true
+          # authorizer: lambdaAuthorizerItemsReadItemsWrite
 
-
-#  test:
-#     handler: ./serverless-functions/auth/lambdaJwtAuthorization.test
-#     events:
-#       - http:
-#           method: post
-#           path: test
-#           authorizer: lambdaAuthorizerItemsReadItemsWrite
-#           cors: true

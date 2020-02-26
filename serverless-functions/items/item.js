@@ -19,7 +19,7 @@ class Item {
             this.name = jsonData.titleModule.subject;
             this.price = jsonData.priceModule.formatedActivityPrice;
             this.description = jsonData.pageModule.description;
-            let optionsFromNetwork = jsonData.skuModule.productSKUPropertyList;
+            let optionsFromNetwork = jsonData.skuModule.productSKUPropertyList || [];
             this.options = optionsFromNetwork.map((p) => {
 
                 let option = {};
@@ -51,7 +51,7 @@ class Item {
     toSquareItem() {
 
         let req = { "idempotency_key": uuid() };
-        
+
         let objects = [];
         let object = {
             "type": "ITEM",
@@ -95,8 +95,8 @@ class Item {
         }
 
         let image_data = {
-            "url" : this.image,
-            "name" : `${this.name} image`,
+            "url": this.image,
+            "name": `${this.name} image`,
         };
         // insert the item into the batch objects with the accompanying options and return 
         // the appropriate request body
@@ -111,11 +111,12 @@ const scrape = (data) => {
     try {
         // remove the dangling comma and all redundant stuff after and return
         let cleaned = data.match(/data: \{.*\}/g)[0].replace(/[\n\r]/g, '');
+        console.log('+++++++++++++++++++++++++++++ here is cleaned: ' + cleaned);
         cleaned = cleaned.substring(6);
         return JSON.parse(cleaned);
     } catch (e) {
         // if Aliexpress schema changes will not crash but return JSON parsing error
-        throw Error('problem with the schema aliExpress returned');
+        throw Error('AliExpress item redirected to login try again.');
     }
 }
 
@@ -136,8 +137,8 @@ const generateSuccessResponse = (successfulItem) => ({
         'Content-type': 'application/json'
     },
     body: JSON.stringify(successfulItem),
-    isBase64Encoded : false
-    
+    isBase64Encoded: false
+
 })
 
 const generateErrorResponse = (e) => ({
@@ -147,16 +148,31 @@ const generateErrorResponse = (e) => ({
         'Access-Control-Allow-Credentials': true,
         'Content-type': 'application/json'
     },
-    body: JSON.stringify({message : e.message}),
-    isBase64Encoded : false
+    body: JSON.stringify({ message: e.message }),
+    isBase64Encoded: false
 })
 
-exports.get = async (event, context, callback) => 
-    fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
-    .then(
-        res => res.text()
-    .then(
-        body => callback(null, generateSuccessResponse(parseAliData(body)))
-    .catch(err =>  callback(null, generateErrorResponse(Error('could not get item from aliExpress'))))));
+const handleAliResponse = (body) => {
+    console.log(body);
+    try {
+        const aliItem = parseAliData(body);
+        console.log(`++++++++++++++++++++++++ the name is : ${aliItem.name} ++++++++++++++++++++++++++++`);
+        return generateSuccessResponse(aliItem);
+    } catch (e) {
+        return generateErrorResponse(e)
+    }
+}
+
+
+exports.get = async (event, context, callback) => fetch(`https://www.aliexpress.com/item/${event.queryStringParameters.item}.html`)
+        .then(
+            res => res.text()
+        )
+        .then(
+            body => handleAliResponse(body))
+        .catch(err => generateErrorResponse(Error('could not get item from aliExpress')));
+
+  
+
 
 module.exports.Item = Item;
