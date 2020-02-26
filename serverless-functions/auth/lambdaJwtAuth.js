@@ -3,11 +3,7 @@ const jwt = require('./jwtModule.js');
 
 exports.handler = async function (event) {
    const token = event.authorizationToken;
-<<<<<<< HEAD:serverless-functions/auth/lambdaJwtAuthorization.js
-   const methodArn = 'arn:aws:execute-api:<Region id>:<Account id>:<API id>/<Stage>/<Method>/<Resource path>';
-=======
-   const methodArn = 'arn:aws:execute-api:ap-southeast-2:322782523902:7ec8t75vad/*';
->>>>>>> dev:serverless-functions/auth/lambdaJwtAuth.js
+   const methodArn = 'arn:aws:execute-api:xxxxxxxxxxxxxxxx:xxxxxxxxxxxxxxxxxxxxxx/*';
      if(token!==undefined){
         try{
             const decoded = jwt.verify(token);
