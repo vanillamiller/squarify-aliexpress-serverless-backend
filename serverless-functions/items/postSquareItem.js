@@ -69,6 +69,7 @@ const invalidTokenResponse = {
 }
 
 const postItemToSquare = (options) => fetch(`https://connect.${real}.com/v2/catalog/batch-upsert`,
+    options
     )
     .then(res => res.json())
     .then(json => {
