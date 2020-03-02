@@ -6,24 +6,6 @@ const jwt = require('../auth/jwtModule');
 const decrypt = require('../auth/encryption').decrypt;
 const uuid = require('uuid');
 const FormData = require('form-data');
-<<<<<<< HEAD
-const real = "squareup";
-const sandbox = "squareupsandbox";
-
-let params = {
-  host: `connect.${real}.com`,
-  path: "/v2/catalog/batch-upsert",
-  port: 443,
-  method: "POST",
-  headers: {
-    "Square-Version": "2020-01-22",
-    "Content-type": "application/json",
-    "Accept": "application/json",
-
-  }
-};
-=======
->>>>>>> dev
 
 const successResponse = {
   statusCode: 200,
